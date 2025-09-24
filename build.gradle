@@ -25,6 +25,9 @@ repositories {
 }
 
 dependencies {
+	// 모듈 의존성
+	implementation project(':auth')
+	
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -42,8 +45,6 @@ dependencies {
     // Flyway 의존성 추가
     implementation 'org.flywaydb:flyway-core:9.20.0'
     implementation 'org.flywaydb:flyway-mysql:9.20.0'
-
-
 }
 
 tasks.named('test') {
