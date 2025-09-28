@@ -7,6 +7,11 @@ public abstract class AggregateRoot<ID> extends Entity<ID> {
     
     private final List<DomainEvent> domainEvents = new ArrayList<>();
     
+    // JPA용 기본 생성자
+    protected AggregateRoot() {
+        super();
+    }
+    
     protected AggregateRoot(ID id) {
         super(id);
     }

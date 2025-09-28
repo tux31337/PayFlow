@@ -4,7 +4,11 @@ import java.util.Objects;
 
 public abstract class Entity<ID> {
     
-    protected final ID id;
+    protected ID id;
+    
+    // JPA용 기본 생성자
+    protected Entity() {
+    }
     
     protected Entity(ID id) {
         this.id = Objects.requireNonNull(id, "ID cannot be null");
