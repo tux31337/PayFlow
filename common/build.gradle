@@ -1,0 +1,12 @@
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+    archiveClassifier = ''
+}
+
+dependencies {
+    implementation 'org.springframework:spring-context'
+}

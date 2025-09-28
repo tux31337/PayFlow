@@ -1,2 +1,4 @@
 rootProject.name = 'truvis'
-include 'auth'
+
+include 'common'
+include 'member'
