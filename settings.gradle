@@ -1,2 +1,2 @@
-rootProject.name = 'payflow'
+rootProject.name = 'truvis'
 include 'auth'
