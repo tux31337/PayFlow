@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = {"com.truvis"})
-public class truvisApplication {
+public class TruvisApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(truvisApplication.class, args);
+		SpringApplication.run(TruvisApplication.class, args);
 	}
 
 }
