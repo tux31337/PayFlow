@@ -1,6 +1,6 @@
-package com.truvis.member.repository;
+package com.truvis.user.repository;
 
-import com.truvis.member.domain.User;
+import com.truvis.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

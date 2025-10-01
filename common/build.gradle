@@ -9,4 +9,10 @@ jar {
 
 dependencies {
     implementation 'org.springframework:spring-context'
+    implementation 'org.springframework:spring-web'            // Web 관련 클래스들
+    implementation 'org.springframework:spring-webmvc'         // @RestControllerAdvice 등
+    implementation 'org.springframework.boot:spring-boot-starter-web'  // 전체 Web 스타터
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 }

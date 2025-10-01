@@ -1,4 +1,4 @@
-package com.truvis.member.domain;
+package com.truvis.user.domain;
 
 /**
  * 회원가입 타입

@@ -1,4 +1,4 @@
-package com.truvis.member.model;
+package com.truvis.user.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

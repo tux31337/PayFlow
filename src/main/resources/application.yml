@@ -41,6 +41,25 @@ spring:
         min-idle: 0
         max-wait: -1ms
         
+  # 이메일 설정 (개발용 - 콘솔 출력)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ljm920604@gmail.com  # 실제 Gmail 계정으로 변경 필요
+    password: vyra tzdr ejrz nbtj
+    # Gmail 앱 비밀번호로 변경 필요
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    # 개발용 설정: 실제 이메일 발송 대신 콘솔에 출력
+    test-connection: false
+        
 # JWT 설정
 jwt:
   secret: truvis-secret-key-for-jwt-token-generation-please-change-in-production-environment

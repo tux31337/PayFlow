@@ -21,6 +21,11 @@ public class ApiResponse<T> {
         return new ApiResponse<>(true, data, message, null);
     }
     
+    // 메시지만으로 성공 응답 (data 없음)
+    public static ApiResponse<Void> success(String message) {
+        return new ApiResponse<>(true, null, message, null);
+    }
+    
     public static <T> ApiResponse<T> error(String message) {
         return new ApiResponse<>(false, null, message, null);
     }

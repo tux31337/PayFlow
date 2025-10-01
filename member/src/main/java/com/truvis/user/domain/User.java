@@ -1,4 +1,4 @@
-package com.truvis.member.domain;
+package com.truvis.user.domain;
 
 import com.truvis.common.model.AggregateRoot;
 import jakarta.persistence.*;
