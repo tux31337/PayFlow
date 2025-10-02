@@ -5,14 +5,18 @@ server:
 spring:
   application:
     name: truvis
-    
+
+  # Profile 설정 (로컬 개발시 local 프로파일 활성화)
+  profiles:
+    active: local
+
   # 데이터베이스 설정 (개발용 H2)
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
     username: sa
     password:
-    
+
   # JPA 설정
   jpa:
     hibernate:
@@ -21,13 +25,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        
+
   # H2 콘솔 활성화 (개발용)
   h2:
     console:
       enabled: true
       path: /h2-console
-      
+
   # Redis 설정
   redis:
     host: localhost
@@ -40,14 +44,13 @@ spring:
         max-idle: 8
         min-idle: 0
         max-wait: -1ms
-        
-  # 이메일 설정 (개발용 - 콘솔 출력)
+
+  # 이메일 설정
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ljm920604@gmail.com  # 실제 Gmail 계정으로 변경 필요
-    password: vyra tzdr ejrz nbtj
-    # Gmail 앱 비밀번호로 변경 필요
+    username: ${MAIL_USERNAME:}  # 환경변수 또는 application-local.yml에서 주입
+    password: ${MAIL_PASSWORD:}  # 환경변수 또는 application-local.yml에서 주입
     properties:
       mail:
         smtp:
@@ -57,12 +60,11 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-    # 개발용 설정: 실제 이메일 발송 대신 콘솔에 출력
     test-connection: false
-        
+
 # JWT 설정
 jwt:
-  secret: truvis-secret-key-for-jwt-token-generation-please-change-in-production-environment
+  secret: ${JWT_SECRET:}  # 환경변수 또는 application-local.yml에서 주입
   expiration: 86400000 # 24시간 (밀리초)
   refresh-expiration: 604800000 # 7일 (밀리초)
 

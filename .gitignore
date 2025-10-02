@@ -39,3 +39,7 @@ out/
 ### Docker ###
 docker-compose.override.yml
 .env
+
+### Custom ###
+**/application-local.yml
+**/application-local.properties
