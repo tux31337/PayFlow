@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/member")
+@RequestMapping("/api/user")
 @Slf4j
 public class UserController {
 
@@ -23,7 +23,7 @@ public class UserController {
 
     /**
      * 회원가입 API
-     * POST /api/member/signup
+     * POST /api/user/signup
      */
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignUpResponse>> signUp(

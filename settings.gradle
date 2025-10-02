@@ -1,4 +1,4 @@
 rootProject.name = 'truvis'
 
 include 'common'
-include 'member'
+include 'user'

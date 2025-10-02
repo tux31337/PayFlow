@@ -15,7 +15,7 @@ allprojects {
 
 // 루트 프로젝트 의존성
 dependencies {
-    implementation project(':member')
+    implementation project(':user')
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
