@@ -1,4 +1,7 @@
 # truvis 애플리케이션 설정
+server:
+  port: 8080
+
 spring:
   application:
     name: truvis
@@ -25,6 +28,38 @@ spring:
       enabled: true
       path: /h2-console
       
+  # Redis 설정
+  redis:
+    host: localhost
+    port: 6379
+    password: # 로컬 개발시 비밀번호 없음
+    timeout: 2000ms
+    jedis:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
+        
+  # 이메일 설정 (개발용 - 콘솔 출력)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ljm920604@gmail.com  # 실제 Gmail 계정으로 변경 필요
+    password: vyra tzdr ejrz nbtj
+    # Gmail 앱 비밀번호로 변경 필요
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    # 개발용 설정: 실제 이메일 발송 대신 콘솔에 출력
+    test-connection: false
+        
 # JWT 설정
 jwt:
   secret: truvis-secret-key-for-jwt-token-generation-please-change-in-production-environment
@@ -36,3 +71,4 @@ logging:
   level:
     com.truvis: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.data.redis: DEBUG
