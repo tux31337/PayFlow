@@ -39,12 +39,12 @@ public class UserService {
 
         // 2. 이메일 중복 체크
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw MemberException.emailAlreadyExists(request.getEmail());  // ← 변경
+            throw MemberException.emailAlreadyExists(request.getEmail());
         }
 
         // 3. 이메일 인증 완료 확인
         if (!emailVerificationService.isEmailVerified(request.getEmail())) {
-            throw MemberException.emailNotVerified();  // ← 변경
+            throw MemberException.emailNotVerified();
         }
 
         // 4. 비밀번호 암호화

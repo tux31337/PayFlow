@@ -24,7 +24,6 @@ public class SignUpRequest {
     @NotBlank(message = "비밀번호 확인은 필수입니다")
     private String passwordConfirm;
 
-    // 명시적 생성자 (테스트용)
     public SignUpRequest(String email, String name, String password, String passwordConfirm) {
         this.email = email;
         this.name = name;

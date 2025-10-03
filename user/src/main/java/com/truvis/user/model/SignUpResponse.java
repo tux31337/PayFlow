@@ -12,7 +12,6 @@ public class SignUpResponse {
     private String email;
     private String name;
 
-    // 명시적 생성자
     private SignUpResponse(Long userId, String email, String name) {
         this.userId = userId;
         this.email = email;
