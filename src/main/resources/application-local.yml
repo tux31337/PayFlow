@@ -1,0 +1,7 @@
+spring:
+  mail:
+    username: ljm920604@gmail.com
+    password: vyra tzdr ejrz nbtj
+
+jwt:
+  secret: 6c7b47dbfff2108265796cbf2d1a684f
