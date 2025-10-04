@@ -9,10 +9,17 @@ jar {
 
 dependencies {
     implementation 'org.springframework:spring-context'
-    implementation 'org.springframework:spring-web'            // Web 관련 클래스들
-    implementation 'org.springframework:spring-webmvc'         // @RestControllerAdvice 등
-    implementation 'org.springframework.boot:spring-boot-starter-web'  // 전체 Web 스타터
+    implementation 'org.springframework:spring-web'
+    implementation 'org.springframework:spring-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+
+    // JWT 라이브러리 추가
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 }

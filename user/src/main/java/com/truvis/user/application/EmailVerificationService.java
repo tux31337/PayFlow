@@ -6,7 +6,7 @@ import com.truvis.user.domain.EmailVerification;
 import com.truvis.user.domain.EmailVerificationRepository;
 import com.truvis.user.infrastructure.EmailSender;
 import com.truvis.user.infrastructure.RedisEmailVerificationRepository;
-import com.truvis.user.repository.UserRepository;
+import com.truvis.user.domain.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

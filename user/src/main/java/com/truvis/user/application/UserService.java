@@ -4,7 +4,7 @@ import com.truvis.common.exception.MemberException;
 import com.truvis.user.domain.User;
 import com.truvis.user.model.SignUpRequest;
 import com.truvis.user.model.SignUpResponse;
-import com.truvis.user.repository.UserRepository;
+import com.truvis.user.domain.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -63,12 +63,12 @@ public class UserService {
         // 7. 이메일 인증 정보 정리
         emailVerificationService.clearVerifiedEmail(request.getEmail());
 
-        log.info("회원가입 완료: userId={}, email={}", savedUser.getId(), savedUser.getEmail());
+        log.info("회원가입 완료: userId={}, email={}", savedUser.getId(), savedUser.getEmailValue());
 
         // 8. 응답 생성
         return SignUpResponse.of(
                 savedUser.getId(),
-                savedUser.getEmail(),
+                savedUser.getEmailValue(),
                 savedUser.getName()
         );
     }

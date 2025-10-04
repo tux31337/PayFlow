@@ -26,4 +26,28 @@ public class MemberException extends BusinessException {
     public static MemberException userNotFound(Long userId) {
         return new MemberException("MEMBER_004", "사용자를 찾을 수 없습니다: " + userId);
     }
+
+    public static MemberException userNotFoundByEmail(String email) {
+        return new MemberException("MEMBER_005", "존재하지 않는 사용자입니다");
+    }
+
+    public static MemberException invalidPassword() {
+        return new MemberException("MEMBER_006", "비밀번호가 일치하지 않습니다");
+    }
+
+    public static MemberException socialUserCannotUsePasswordLogin() {
+        return new MemberException("MEMBER_007", "소셜 로그인 사용자는 비밀번호 로그인을 사용할 수 없습니다");
+    }
+
+    public static MemberException passwordNotSet() {
+        return new MemberException("MEMBER_008", "비밀번호가 설정되지 않은 사용자입니다");
+    }
+
+    public static MemberException invalidRefreshToken() {
+        return new MemberException("MEMBER_009", "유효하지 않은 리프레시 토큰입니다");
+    }
+
+    public static MemberException expiredRefreshToken() {
+        return new MemberException("MEMBER_010", "만료된 리프레시 토큰입니다");
+    }
 }

@@ -37,9 +37,4 @@ public class UserController {
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "회원가입이 완료되었습니다"));
     }
-
-    @GetMapping("/test")
-    public String test() {
-        return "Hello, this is a test API!";
-    }
 }

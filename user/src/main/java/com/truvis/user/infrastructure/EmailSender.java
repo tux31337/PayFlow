@@ -18,7 +18,11 @@ public class EmailSender {
      * 인증번호 이메일 전송
      */
     public void sendVerificationCodeEmail(String toEmail, String code) {
-        
+        log.info("===========================================");
+        log.info("📧 이메일 발송 (테스트 모드)");
+        log.info("받는 사람: {}", toEmail);
+        log.info("인증 코드: {}", code);
+        log.info("===========================================");
         if (mailSender == null) {
             // 개발 환경: JavaMailSender가 없으면 콘솔에 출력
             logEmailToConsole(toEmail, code);

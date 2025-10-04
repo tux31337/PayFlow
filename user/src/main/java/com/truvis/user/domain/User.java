@@ -1,5 +1,6 @@
 package com.truvis.user.domain;
 
+import com.truvis.common.exception.MemberException;
 import com.truvis.common.model.AggregateRoot;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -19,8 +20,8 @@ public class User extends AggregateRoot<Long> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
+    @Embedded
+    private Email email;
     
     @Column(nullable = false, length = 50)
     private String name;
@@ -28,7 +29,8 @@ public class User extends AggregateRoot<Long> {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SignUpType signUpType;
-    
+
+    // 비밀번호 getter - Application 계층에서 검증용
     // 일반 가입용 - 소셜 가입시 null
     @Column(length = 100)
     private String password;
@@ -47,7 +49,7 @@ public class User extends AggregateRoot<Long> {
     private LocalDateTime updatedAt;
     
     @Builder
-    private User(String email, String name, SignUpType signUpType, 
+    private User(Email email, String name, SignUpType signUpType,
                 String password, String socialId, String socialProvider) {
         this.email = email;
         this.name = name;
@@ -60,9 +62,9 @@ public class User extends AggregateRoot<Long> {
     }
     
     // 일반 이메일 가입용 팩토리 메서드
-    public static User createEmailUser(String email, String name, String password) {
+    public static User createEmailUser(String emailValue, String name, String password) {
         return User.builder()
-                .email(email)
+                .email(Email.of(emailValue))
                 .name(name)
                 .signUpType(SignUpType.EMAIL)
                 .password(password)
@@ -70,15 +72,20 @@ public class User extends AggregateRoot<Long> {
     }
     
     // 소셜 가입용 팩토리 메서드
-    public static User createSocialUser(String email, String name, SignUpType signUpType, 
+    public static User createSocialUser(String emailValue, String name, SignUpType signUpType, 
                                        String socialId, String socialProvider) {
         return User.builder()
-                .email(email)
+                .email(Email.of(emailValue))
                 .name(name)
                 .signUpType(signUpType)
                 .socialId(socialId)
                 .socialProvider(socialProvider)
                 .build();
+    }
+    
+    // 이메일 값을 가져오는 편의 메서드
+    public String getEmailValue() {
+        return this.email.getValue();
     }
     
     // 도메인 메서드
@@ -93,5 +100,16 @@ public class User extends AggregateRoot<Long> {
     @PreUpdate
     private void updateTimestamp() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // 이메일 로그인 사용자인지 검증 (도메인 로직)
+    public void validateEmailLoginUser() {
+        if (this.isSocialUser()) {
+            throw MemberException.socialUserCannotUsePasswordLogin();
+        }
+
+        if (this.password == null) {
+            throw MemberException.passwordNotSet();
+        }
     }
 }
