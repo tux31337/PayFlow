@@ -39,8 +39,8 @@ public class User extends AggregateRoot<Long> {
     @Column(length = 100)
     private String socialId;
     
-    @Column(length = 20)
-    private String socialProvider;
+    @Embedded
+    private SocialProvider socialProvider;
     
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -50,7 +50,7 @@ public class User extends AggregateRoot<Long> {
     
     @Builder
     private User(Email email, String name, SignUpType signUpType,
-                String password, String socialId, String socialProvider) {
+                String password, String socialId, SocialProvider socialProvider) {
         this.email = email;
         this.name = name;
         this.signUpType = signUpType;
@@ -73,13 +73,13 @@ public class User extends AggregateRoot<Long> {
     
     // 소셜 가입용 팩토리 메서드
     public static User createSocialUser(String emailValue, String name, SignUpType signUpType, 
-                                       String socialId, String socialProvider) {
+                                       String socialId) {
         return User.builder()
                 .email(Email.of(emailValue))
                 .name(name)
                 .signUpType(signUpType)
                 .socialId(socialId)
-                .socialProvider(socialProvider)
+                .socialProvider(SocialProvider.of(signUpType))
                 .build();
     }
     
@@ -110,6 +110,25 @@ public class User extends AggregateRoot<Long> {
 
         if (this.password == null) {
             throw MemberException.passwordNotSet();
+        }
+    }
+
+    // 특정 프로바이더의 소셜 계정인지 확인
+    public boolean isSocialProviderUser(SignUpType signUpType) {
+        if (this.socialProvider == null) {
+            return false;
+        }
+        return this.socialProvider.getValue().equals(signUpType.name());
+    }
+
+    // 소셜 사용자 검증
+    public void validateSocialUser() {
+        if (!this.isSocialUser()) {
+            throw MemberException.emailUserCannotHaveSocialProvider();
+        }
+
+        if (this.socialId == null || this.socialProvider == null) {
+            throw MemberException.invalidSocialAccount();
         }
     }
 }

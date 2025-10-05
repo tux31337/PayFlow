@@ -50,4 +50,31 @@ public class MemberException extends BusinessException {
     public static MemberException expiredRefreshToken() {
         return new MemberException("MEMBER_010", "만료된 리프레시 토큰입니다");
     }
+
+    public static MemberException emailUserCannotHaveSocialProvider() {
+        return new MemberException("MEMBER_011", "이메일 가입 사용자는 소셜 프로바이더를 가질 수 없습니다.");
+    }
+
+    public static MemberException socialUserCannotHavePassword() {
+        return new MemberException("MEMBER_012", "소셜 가입 사용자는 비밀번호를 가질 수 없습니다.");
+    }
+
+    public static MemberException socialAccountAlreadyExists(String provider) {
+        return new MemberException("MEMBER_013", provider + " 계정이 이미 연동되어 있습니다.");
+    }
+
+    public static MemberException emailAlreadyExistsWithDifferentSignUpType(String email, String existingType) {
+        return new MemberException("MEMBER_014",
+                String.format("이메일 %s는 이미 %s 방식으로 가입되어 있습니다.",
+                        email, existingType)
+        );
+    }
+
+    public static MemberException invalidSocialAccount() {
+        return new MemberException("MEMBER_015", "유효하지 않은 소셜 계정 정보입니다.");
+    }
+
+    public static MemberException unsupportedSocialProvider(String provider) {
+        return new MemberException("MEMBER_016", "지원하지 않는 소셜 프로바이더입니다: " + provider);
+    }
 }

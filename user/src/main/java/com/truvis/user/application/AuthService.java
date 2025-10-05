@@ -118,7 +118,7 @@ public class AuthService {
         } else {
             log.warn("AccessToken이 유효하지 않음");
         }
-        X
+
         // 2. RefreshToken 검증 및 사용자 조회
         log.info("RefreshToken 검증 시작");
         if (!jwtTokenProvider.validateToken(refreshToken)) {
