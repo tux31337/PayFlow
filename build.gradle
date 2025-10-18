@@ -13,10 +13,20 @@ allprojects {
     }
 }
 
+// 루트 프로젝트 Java 버전 설정
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 // 루트 프로젝트 의존성
 dependencies {
-    implementation project(':user')
-    implementation project(':common')
+    implementation project(':service:user')
+    implementation project(':service:common')
+    implementation project(':controller')
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -27,12 +37,21 @@ dependencies {
 }
 
 subprojects {
+    // service 폴더는 실제 모듈이 아니므로 제외
+    if (project.name == 'service') {
+        return
+    }
+
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
     
     java {
         sourceCompatibility = '17'
+        targetCompatibility = '17'
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
     }
     
     configurations {
