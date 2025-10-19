@@ -1,9 +1,11 @@
 package com.truvis.user.application;
 
 import com.truvis.common.exception.EmailVerificationException;
+import com.truvis.notification.domain.Notification;
 import com.truvis.notification.domain.NotificationChannel;
 import com.truvis.notification.domain.NotificationType;
 import com.truvis.notification.event.NotificationRequestedEvent;
+import com.truvis.notification.infrastructure.NotificationStatusRepository;
 import com.truvis.user.domain.Email;
 import com.truvis.user.domain.EmailVerification;
 import com.truvis.user.domain.EmailVerificationRepository;
@@ -21,14 +23,16 @@ public class EmailVerificationService {
     private final UserRepository userRepository;
     private final EmailVerificationRepository verificationRepository;
     private final ApplicationEventPublisher eventPublisher;  // 🎯 변경!
+    private final NotificationStatusRepository notificationStatusRepository;
 
     public EmailVerificationService(
             UserRepository userRepository,
             EmailVerificationRepository verificationRepository,
-            ApplicationEventPublisher eventPublisher) {  // 🎯 변경!
+            ApplicationEventPublisher eventPublisher, NotificationStatusRepository notificationStatusRepository) {  // 🎯 변경!
         this.userRepository = userRepository;
         this.verificationRepository = verificationRepository;
         this.eventPublisher = eventPublisher;
+        this.notificationStatusRepository = notificationStatusRepository;
     }
 
     /**
@@ -72,6 +76,10 @@ public class EmailVerificationService {
         // 1. Value Object 생성
         Email email = Email.of(emailValue);
 
+        // 2. 알림 발송 상태 확인 및 대기
+        waitForEmailSent(emailValue);
+
+
         // 2. 도메인 객체 조회
         EmailVerification verification = verificationRepository.findByEmail(email)
                 .orElseThrow(() -> EmailVerificationException.expiredCode());
@@ -99,6 +107,60 @@ public class EmailVerificationService {
 
         // 6. 이메일 반환
         return email.getValue();
+    }
+
+    /**
+     * 🎯 이메일 발송 완료 대기 (스마트 폴링)
+     * - 최대 5초 대기
+     * - 0.5초마다 상태 확인
+     */
+    private void waitForEmailSent(String email) {
+        final int MAX_ATTEMPTS = 10;  // 0.5초 * 10 = 5초
+        final long POLL_INTERVAL_MS = 500;  // 0.5초
+
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            // Redis에서 알림 상태 조회
+            Notification notification = notificationStatusRepository.findLatestByRecipient(email);
+
+            if (notification == null) {
+                // 알림이 없으면 바로 진행 (Redis에 없을 수도 있음)
+                log.debug("알림 상태 없음, 검증 진행: email={}", email);
+                return;
+            }
+
+            if (notification.isSent()) {
+                // ✅ 발송 완료! 검증 진행
+                log.info("✅ 이메일 발송 완료 확인: email={}, attempt={}", email, attempt);
+                return;
+            }
+
+            if (notification.isFailed()) {
+                // ❌ 발송 실패
+                log.warn("❌ 이메일 발송 실패: email={}", email);
+                throw EmailVerificationException.emailSendFailed(email);
+            }
+
+            if (notification.isProcessing()) {
+                // ⏳ 발송 중... 대기
+                log.debug("⏳ 이메일 발송 중... 대기: email={}, status={}, attempt={}/{}",
+                        email, notification.getStatus(), attempt, MAX_ATTEMPTS);
+
+                try {
+                    Thread.sleep(POLL_INTERVAL_MS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.error("대기 중 인터럽트: email={}", email, e);
+                    throw new RuntimeException("이메일 발송 대기 실패", e);
+                }
+            }
+        }
+
+        // ⚠️ 5초 넘어도 발송 안 됨
+        log.warn("⚠️ 이메일 발송 타임아웃: email={}, maxWait={}초",
+                email, (MAX_ATTEMPTS * POLL_INTERVAL_MS) / 1000);
+
+        // 타임아웃이어도 검증은 시도 (Redis에 코드가 있을 수도)
+        // 사용자 경험을 위해 예외는 던지지 않음
     }
 
     /**

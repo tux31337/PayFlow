@@ -149,6 +149,44 @@ public class NotificationStatusRepository {
                 notification.getStatus());
     }
 
+
+    /**
+     * 이메일 주소로 가장 최근 알림 조회
+     * - 인증번호 검증 시 발송 상태 확인용
+     */
+    public Notification findLatestByRecipient(String recipient) {
+        // 모든 상태의 prefix 확인
+        String[] prefixes = {SENDING_PREFIX, PENDING_PREFIX, SENT_PREFIX, FAILED_PREFIX};
+
+        // 최근 알림을 찾기 위해 각 prefix에서 조회
+        for (String prefix : prefixes) {
+            Set<String> keys = redisTemplate.keys(prefix + "*");
+
+            if (keys != null && !keys.isEmpty()) {
+                for (String key : keys) {
+                    String json = redisTemplate.opsForValue().get(key);
+                    if (json != null) {
+                        try {
+                            Notification notification = objectMapper.readValue(json, Notification.class);
+
+                            // recipient가 일치하는 알림 찾기
+                            if (notification.getRecipient().equals(recipient)) {
+                                log.debug("이메일로 알림 조회: recipient={}, status={}",
+                                        recipient, notification.getStatus());
+                                return notification;
+                            }
+                        } catch (JsonProcessingException e) {
+                            log.error("알림 역직렬화 실패: key={}", key, e);
+                        }
+                    }
+                }
+            }
+        }
+
+        log.debug("이메일로 알림 없음: recipient={}", recipient);
+        return null;
+    }
+
     /**
      * 📊 상태별 알림 개수 (모니터링용)
      */
