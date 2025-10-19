@@ -1,11 +1,15 @@
 package com.truvis.user.application;
 
 import com.truvis.common.exception.MemberException;
+import com.truvis.notification.domain.NotificationChannel;
+import com.truvis.notification.domain.NotificationType;
+import com.truvis.notification.event.NotificationRequestedEvent;
 import com.truvis.user.domain.User;
 import com.truvis.user.model.SignUpRequest;
 import com.truvis.user.model.SignUpResponse;
 import com.truvis.user.domain.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,14 +21,18 @@ public class UserService {
     private final UserRepository userRepository;
     private final EmailVerificationService emailVerificationService;
     private final PasswordEncoder passwordEncoder;
+    private final WelcomeEmailService welcomeEmailService;
 
     public UserService(
             UserRepository userRepository,
             EmailVerificationService emailVerificationService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            WelcomeEmailService welcomeEmailService) {
         this.userRepository = userRepository;
         this.emailVerificationService = emailVerificationService;
         this.passwordEncoder = passwordEncoder;
+        this.welcomeEmailService = welcomeEmailService;
+
     }
 
     /**
@@ -63,6 +71,12 @@ public class UserService {
         // 7. 이메일 인증 정보 정리
         emailVerificationService.clearVerifiedEmail(request.getEmail());
 
+        // 8. 환영 메일 발송 - 비동기 (성공 신경 안씀)
+        welcomeEmailService.sendWelcomeEmail(
+                savedUser.getEmailValue(),
+                savedUser.getName()
+        );
+
         log.info("회원가입 완료: userId={}, email={}", savedUser.getId(), savedUser.getEmailValue());
 
         // 8. 응답 생성
@@ -81,6 +95,4 @@ public class UserService {
             throw MemberException.passwordNotMatched();
         }
     }
-
-
 }

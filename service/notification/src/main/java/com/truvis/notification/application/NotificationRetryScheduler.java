@@ -48,7 +48,19 @@ public class NotificationRetryScheduler {
             int skipCount = 0;
 
             for (Notification notification : failedNotifications) {
-                // 3. 재시도 가능 여부 확인
+                // 🎯 3-A. 재시도 불필요한 타입 체크
+                if (!notification.getType().isRetryable()) {
+                    log.info("⏭️ 재시도 불필요한 타입: id={}, type={}",
+                            notification.getId(),
+                            notification.getType().getDescription());
+
+                    // Redis에서 삭제 (더 이상 재시도 안 함)
+                    statusRepository.delete(notification);
+                    skipCount++;
+                    continue;
+                }
+
+                // 3-B. 재시도 가능 여부 확인
                 if (!notification.canRetry()) {
                     log.warn("🚫 재시도 불가: id={}, retryCount={}/{}",
                             notification.getId(),
@@ -56,16 +68,14 @@ public class NotificationRetryScheduler {
                             notification.getChannel().maxRetryCount());
 
                     skipCount++;
-
-                    // TODO: Dead Letter Queue로 이동
-                    // deadLetterQueueService.add(notification);
                     continue;
                 }
 
                 // 4. 재시도 실행
                 try {
-                    log.info("🔄 재시도 시도: id={}, retryCount={}",
+                    log.info("🔄 재시도 시도: id={}, type={}, retryCount={}",
                             notification.getId(),
+                            notification.getType().getDescription(),
                             notification.getRetryCount());
 
                     notificationService.send(notification);
@@ -78,9 +88,6 @@ public class NotificationRetryScheduler {
                     log.error("❌ 재시도 실패: id={}, error={}",
                             notification.getId(),
                             e.getMessage());
-
-                    // 실패는 notificationService.send()에서 이미 처리됨
-                    // (상태 FAILED로 변경, Redis 저장)
                 }
             }
 
