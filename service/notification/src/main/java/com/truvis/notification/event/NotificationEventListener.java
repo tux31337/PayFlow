@@ -62,14 +62,4 @@ public class NotificationEventListener {
             // 지금은 로그만 남기고 계속 진행
         }
     }
-
-    /**
-     * 🔔 추가 이벤트 핸들러 예시
-     * - 여러 이벤트 타입을 처리할 수 있음
-     */
-    // @Async
-    // @EventListener
-    // public void handleBulkNotification(BulkNotificationEvent event) {
-    //     // 대량 발송 처리
-    // }
 }

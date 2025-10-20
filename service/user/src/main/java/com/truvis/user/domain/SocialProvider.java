@@ -1,6 +1,7 @@
 package com.truvis.user.domain;
 
 import com.truvis.common.exception.MemberException;
+import com.truvis.common.model.ValueObject;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @EqualsAndHashCode
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SocialProvider {
+public class SocialProvider implements ValueObject {
 
     @Column(name = "social_provider", length = 20)
     private String value;

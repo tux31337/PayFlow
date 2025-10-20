@@ -1,5 +1,6 @@
 package com.truvis.notification.event;
 
+import com.truvis.common.model.DomainEvent;
 import com.truvis.notification.domain.NotificationChannel;
 import com.truvis.notification.domain.NotificationType;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Getter
 @ToString
 @Builder
-public class NotificationRequestedEvent {
+public class NotificationRequestedEvent extends DomainEvent {
     /**
      * 받는 사람 (이메일, 전화번호 등)
      */

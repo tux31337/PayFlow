@@ -1,15 +1,11 @@
 package com.truvis.user.application;
 
 import com.truvis.common.exception.MemberException;
-import com.truvis.notification.domain.NotificationChannel;
-import com.truvis.notification.domain.NotificationType;
-import com.truvis.notification.event.NotificationRequestedEvent;
 import com.truvis.user.domain.User;
 import com.truvis.user.model.SignUpRequest;
 import com.truvis.user.model.SignUpResponse;
 import com.truvis.user.domain.UserRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

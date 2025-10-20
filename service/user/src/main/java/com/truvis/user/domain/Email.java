@@ -1,5 +1,6 @@
 package com.truvis.user.domain;
 
+import com.truvis.common.model.ValueObject;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
@@ -11,7 +12,7 @@ import java.util.regex.Pattern;
 @Embeddable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Email {
+public class Email implements ValueObject {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
 
     @Column(name = "email", nullable = false, unique = true, length = 100)

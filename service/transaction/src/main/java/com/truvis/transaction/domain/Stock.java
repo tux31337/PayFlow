@@ -1,4 +1,4 @@
-package com.truvis.stock.domain;
+package com.truvis.transaction.domain;
 
 /**
  * 주식 집합체 루트
