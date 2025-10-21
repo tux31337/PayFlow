@@ -17,16 +17,16 @@ import java.util.concurrent.Executor;
 @EnableAsync
 @EnableScheduling  // 🎯 추가!
 @Slf4j
-public class AsyncConfig implements AsyncConfigurer {
+public class NotificationAsyncConfig implements AsyncConfigurer {
 
     @Override
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
         // 스레드 풀 설정
-        executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(10);
-        executor.setQueueCapacity(100);
+        executor.setCorePoolSize(10);     // 10개 (많이!)
+        executor.setMaxPoolSize(50);      // 최대 50개
+        executor.setQueueCapacity(500);   // 큐 500개
         executor.setThreadNamePrefix("notification-async-");
 
         // 🎯 거부 정책

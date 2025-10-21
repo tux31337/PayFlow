@@ -29,6 +29,7 @@ dependencies {
     implementation project(':service:common')
     implementation project(':service:master')
     implementation project(':service:user')
+    implementation project(":service:transaction")
     
     // Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web:3.2.0'

@@ -47,7 +47,7 @@ interface TransactionJpaRepository extends JpaRepository<Transaction, Long> {
 public class JpaTransactionRepositoryAdapter implements TransactionRepository {
 
     private final TransactionJpaRepository jpaRepository;
-    private final ApplicationEventPublisher eventPublisher;  // 🎯 이벤트 발행기
+    private final ApplicationEventPublisher eventPublisher;  // 이벤트 발행기
 
     /**
      * 거래 저장 + 도메인 이벤트 발행
