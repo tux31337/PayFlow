@@ -5,3 +5,10 @@ spring:
 
 jwt:
   secret: 6c7b47dbfff2108265796cbf2d1a684f
+  refresh-expiration: 1209600000
+
+oauth2:
+  kakao:
+    client-id: adf60a23dc85faf08192672c6b06cfc0
+    client-secret: V8TJ8wSAAehwRVzLbK1CQTKJxR9vtI3B
+    redirect-uri: http://localhost:8080/login/oauth2/code/kakao

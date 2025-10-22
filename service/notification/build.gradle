@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.truvis'
+version = '0.0.1-SNAPSHOT'
+
+// 라이브러리 모듈이므로 bootJar 비활성화
+tasks.named('bootJar') {
+    enabled = false
+}
+
+tasks.named('jar') {
+    enabled = true
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Common 모듈 의존성
+    implementation project(':service:common')
+
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.2.0'  // 🎯 추가!
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
+
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // Mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.0'
+}
+
+test {
+    useJUnitPlatform()
+}
