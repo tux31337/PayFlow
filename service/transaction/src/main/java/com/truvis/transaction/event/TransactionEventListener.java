@@ -20,7 +20,7 @@ public class TransactionEventListener {
      * @Async: 비동기 처리 (별도 스레드에서 실행)
      * @EventListener: Spring Events 자동 감지
      */
-    @Async
+    @Async("transactionExecutor")
     @EventListener
     public void handleTransactionCompleted(TransactionCompletedEvent event) {
         log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");

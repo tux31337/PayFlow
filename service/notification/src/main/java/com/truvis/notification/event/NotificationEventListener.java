@@ -26,7 +26,7 @@ public class NotificationEventListener {
      * @Async: 별도 스레드에서 실행 → 즉시 응답!
      * @EventListener: Spring 이벤트 자동 감지
      */
-    @Async
+    @Async("notificationExecutor")
     @EventListener
     public void handleNotificationRequested(NotificationRequestedEvent event) {
         log.info("📬 알림 이벤트 수신: type={}, channel={}, recipient={}",
