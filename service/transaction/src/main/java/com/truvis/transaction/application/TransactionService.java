@@ -33,9 +33,6 @@ public class TransactionService {
             int quantity,
             String price
     ) {
-        log.info("🔄 거래 실행 시작: userId={}, stockCode={}, type={}, quantity={}, price={}",
-                userId, stockCode, type.getDisplayName(), quantity, price);
-
         // 1. 도메인 객체 생성 (비즈니스 규칙 검증 포함)
         Transaction transaction = Transaction.execute(
                 userId,
@@ -45,13 +42,15 @@ public class TransactionService {
                 Price.of(price)
         );
 
-        log.debug("거래 객체 생성 완료: {}", transaction.getDescription());
+        log.debug("거래 객체 생성: {}", transaction.getDescription());
 
         // 2. 저장 (자동으로 도메인 이벤트 발행!)
         Transaction saved = transactionRepository.save(transaction);
 
-        log.info("✅ 거래 실행 완료: id={}, totalAmount={}원",
-                saved.getId(), saved.getTotalAmount().getValue());
+        log.info("거래 실행 완료: id={}, type={}, amount={}원",
+                saved.getId(), 
+                type.getDisplayName(),
+                saved.getTotalAmount().getValue());
 
         return saved;
     }

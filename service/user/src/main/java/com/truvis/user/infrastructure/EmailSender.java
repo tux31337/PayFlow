@@ -18,11 +18,6 @@ public class EmailSender {
      * 인증번호 이메일 전송
      */
     public void sendVerificationCodeEmail(String toEmail, String code) {
-        log.info("===========================================");
-        log.info("📧 이메일 발송 (테스트 모드)");
-        log.info("받는 사람: {}", toEmail);
-        log.info("인증 코드: {}", code);
-        log.info("===========================================");
         if (mailSender == null) {
             // 개발 환경: JavaMailSender가 없으면 콘솔에 출력
             logEmailToConsole(toEmail, code);
@@ -37,10 +32,10 @@ public class EmailSender {
             message.setFrom("noreply@truvis.com");
             
             mailSender.send(message);
-            log.info("인증번호 이메일 전송 완료: {}", toEmail);
+            log.info("인증 이메일 발송 완료: to={}", toEmail);
             
         } catch (Exception e) {
-            log.error("인증번호 이메일 전송 실패: email={}, error={}", toEmail, e.getMessage());
+            log.error("인증 이메일 발송 실패: to={}, error={}", toEmail, e.getMessage());
             throw EmailVerificationException.emailSendFailed(toEmail);
         }
     }
@@ -49,14 +44,10 @@ public class EmailSender {
      * 개발용 - 콘솔에 이메일 내용 출력
      */
     private void logEmailToConsole(String toEmail, String code) {
-        String content = createVerificationCodeEmailContent(code);
-        String subject = "[Truvis] 이메일 인증번호입니다";
-        
-        log.info("=== 개발용 이메일 전송 (콘솔 출력) ===");
-        log.info("수신자: {}", toEmail);
-        log.info("제목: {}", subject);
-        log.info("내용:\n{}", content);
-        log.info("=======================================");
+        log.info("=== 개발 모드: 이메일 발송 ===");
+        log.info("To: {}", toEmail);
+        log.info("Code: {}****", code.substring(0, 2)); // 앞 2자리만 표시
+        log.info("==============================");
     }
     
     /**

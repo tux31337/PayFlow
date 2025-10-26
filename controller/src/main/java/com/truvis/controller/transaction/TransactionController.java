@@ -4,9 +4,11 @@ import com.truvis.common.response.ApiResponse;
 import com.truvis.transaction.application.TransactionService;
 import com.truvis.transaction.domain.Transaction;
 import com.truvis.transaction.domain.TransactionType;
+import com.truvis.user.application.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,25 +20,25 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final UserService userService;
 
     /**
      * 거래 실행
+     * 인증 필수: JWT에서 사용자 정보를 자동 주입
      */
     @PostMapping
     public ResponseEntity<ApiResponse<TransactionResponse>> executeTransaction(
-            @RequestBody TransactionRequest request
+            @AuthenticationPrincipal Long userId,  // Spring Security가 자동 주입
+            @RequestBody TransactionRequestSecure request
     ) {
-        log.info("🔵 [API] 거래 실행 요청: {}", request);
-
+        // 거래 실행
         Transaction transaction = transactionService.executeTransaction(
-                request.userId(),
+                userId,
                 request.stockCode(),
                 TransactionType.valueOf(request.type()),
                 request.quantity(),
                 request.price()
         );
-
-        log.info("🔵 [API] 거래 실행 완료: id={}", transaction.getId());
 
         return ResponseEntity.ok(
                 ApiResponse.success(TransactionResponse.from(transaction))
@@ -44,14 +46,13 @@ public class TransactionController {
     }
 
     /**
-     * 사용자 거래 내역 조회
+     * 내 거래 내역 조회
+     * 🔒 인증 필수: JWT에서 사용자 정보를 자동 주입
      */
-    @GetMapping("/users/{userId}")
-    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getUserTransactions(
-            @PathVariable Long userId
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getMyTransactions(
+            @AuthenticationPrincipal Long userId  // 🎯 Spring Security가 자동 주입
     ) {
-        log.info("🔵 [API] 사용자 거래 내역 조회: userId={}", userId);
-
         List<Transaction> transactions = transactionService.getUserTransactions(userId);
         List<TransactionResponse> responses = transactions.stream()
                 .map(TransactionResponse::from)
@@ -62,10 +63,10 @@ public class TransactionController {
 }
 
 /**
- * 거래 실행 요청
+ * 거래 실행 요청 (보안 강화 버전)
+ * 🔒 userId 제거: 클라이언트가 임의로 userId를 보낼 수 없음
  */
-record TransactionRequest(
-        Long userId,
+record TransactionRequestSecure(
         String stockCode,
         String type,  // "BUY" or "SELL"
         int quantity,

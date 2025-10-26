@@ -1,5 +1,6 @@
 package com.truvis.transaction.config;
 
+import com.truvis.common.config.MdcTaskDecorator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,9 @@ public class TransactionAsyncConfig implements AsyncConfigurer {
         executor.setMaxPoolSize(10);       // 최대 스레드 10개
         executor.setQueueCapacity(100);    // 대기 큐 100개
         executor.setThreadNamePrefix("transaction-async-");
+
+        // 🎯 MDC와 SecurityContext 전달 (비동기 작업에서도 로그 추적 가능)
+        executor.setTaskDecorator(new MdcTaskDecorator());
 
         // 거부 정책
         executor.setRejectedExecutionHandler((r, e) -> {

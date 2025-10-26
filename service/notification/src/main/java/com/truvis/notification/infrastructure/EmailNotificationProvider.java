@@ -26,10 +26,6 @@ public class EmailNotificationProvider implements NotificationProvider{
 
     @Override
     public void send(Notification notification) {
-        log.info("📧 이메일 발송 시작: type={}, recipient={}",
-                notification.getType().getDescription(),
-                notification.getRecipient());
-
         // JavaMailSender가 없으면 콘솔 로그만 (개발용)
         if (mailSender == null) {
             logToConsole(notification);
@@ -40,13 +36,16 @@ public class EmailNotificationProvider implements NotificationProvider{
             SimpleMailMessage message = createEmailMessage(notification);
             mailSender.send(message);
 
-            log.info("✅ 이메일 발송 완료: recipient={}, duration={}ms",
+            log.info("이메일 발송 완료: type={}, to={}, duration={}ms",
+                    notification.getType(),
                     notification.getRecipient(),
                     notification.getSendingDurationMillis());
 
         } catch (Exception e) {
-            log.error("❌ 이메일 발송 실패: recipient={}, error={}",
-                    notification.getRecipient(), e.getMessage());
+            log.error("이메일 발송 실패: type={}, to={}, error={}",
+                    notification.getType(),
+                    notification.getRecipient(), 
+                    e.getMessage());
             throw new RuntimeException("이메일 발송 실패: " + e.getMessage(), e);
         }
     }
@@ -81,12 +80,10 @@ public class EmailNotificationProvider implements NotificationProvider{
      * 개발용: 콘솔에 이메일 내용 출력
      */
     private void logToConsole(Notification notification) {
-        log.info("===========================================");
-        log.info("📧 이메일 발송 (개발 모드 - 콘솔 출력)");
-        log.info("===========================================");
-        log.info("받는 사람: {}", notification.getRecipient());
-        log.info("제목: {}", createSubject(notification.getType()));
-        log.info("내용:\n{}", notification.getContent());
-        log.info("===========================================");
+        log.info("=== 개발 모드: 이메일 발송 ===");
+        log.info("Type: {}", notification.getType());
+        log.info("To: {}", notification.getRecipient());
+        log.info("Subject: {}", createSubject(notification.getType()));
+        log.info("==============================");
     }
 }

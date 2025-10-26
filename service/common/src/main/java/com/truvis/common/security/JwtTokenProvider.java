@@ -28,29 +28,35 @@ public class JwtTokenProvider {
     }
 
     // 1. AccessToken 생성
-    public String createToken(String email) {
-        return createToken(email, validityInMilliseconds);
+    public String createToken(Long userId) {
+        return createToken(userId, validityInMilliseconds);
     }
 
     // 2. RefreshToken 생성
-    public String createRefreshToken(String email) {
-        return createToken(email, refreshTokenValidityInMilliseconds);
+    public String createRefreshToken(Long userId) {
+        return createToken(userId, refreshTokenValidityInMilliseconds);
     }
     
     // 3. 공통 토큰 생성 로직 (private)
-    private String createToken(String email, long validityInMilliseconds) {
+    private String createToken(Long userId, long validityInMilliseconds) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(userId.toString())  // JWT 표준: subject에 userId 저장
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // 3. 토큰에서 이메일 추출
+    // 3. 토큰에서 userId 추출
+    public Long getUserId(String token) {
+        return Long.parseLong(getClaims(token).getSubject());
+    }
+
+    // 호환성을 위해 남겨둠 (기존 코드에서 사용 중인 경우)
+    @Deprecated
     public String getEmail(String token) {
         return getClaims(token).getSubject();
     }
@@ -67,6 +73,8 @@ public class JwtTokenProvider {
             Date expiration = claims.getExpiration();
             return !expiration.before(new Date());  // 만료 시간이 현재보다 이후인지 확인
         } catch (Exception e) {
+            System.err.println("🔴 JWT 검증 실패: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
             return false;  // 파싱 실패 = 유효하지 않은 토큰
         }
     }

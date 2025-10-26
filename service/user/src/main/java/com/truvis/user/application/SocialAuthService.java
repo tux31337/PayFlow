@@ -92,11 +92,11 @@ public class SocialAuthService {
      */
     private LoginResponse generateTokenResponse(User user) {
         // AccessToken 생성
-        String accessToken = jwtTokenProvider.createToken(user.getEmailValue());
+        String accessToken = jwtTokenProvider.createToken(user.getId());
         Date accessTokenExpiresAt = jwtTokenProvider.getExpirationDate(accessToken);
 
         // RefreshToken 생성
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmailValue());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
         Date refreshTokenExpiresAt = jwtTokenProvider.getExpirationDate(refreshToken);
 
         // RefreshToken을 Redis에 저장
