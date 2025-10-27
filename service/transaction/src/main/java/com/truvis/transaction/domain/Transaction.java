@@ -1,7 +1,6 @@
 package com.truvis.transaction.domain;
 
 import com.truvis.common.model.AggregateRoot;
-import com.truvis.transaction.event.TransactionCompletedEvent;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -89,27 +88,18 @@ public class Transaction extends AggregateRoot<Long> {
     }
 
     /**
-     * 정적 팩토리 메서드 - 거래 실행
+     * 정적 팩토리 메서드 - 거래 생성
      *
-     * @return 실행된 거래 객체 (도메인 이벤트 포함)
+     * @return 생성된 거래 객체
      */
-    public static Transaction execute(
+    public static Transaction create(
             Long userId,
             StockCode stockCode,
             TransactionType type,
             Quantity quantity,
             Price price
     ) {
-        Transaction transaction = new Transaction(
-                userId, stockCode, type, quantity, price
-        );
-
-        // 도메인 이벤트 발행!
-        transaction.addDomainEvent(
-                TransactionCompletedEvent.of(transaction)
-        );
-
-        return transaction;
+        return new Transaction(userId, stockCode, type, quantity, price);
     }
 
     /**

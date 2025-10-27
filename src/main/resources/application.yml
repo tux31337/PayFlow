@@ -20,7 +20,7 @@ spring:
   # JPA 설정
   jpa:
     hibernate:
-      ddl-auto: update  # 스키마 변경사항만 업데이트 (데이터 유지)
+      ddl-auto: create-drop  # 스키마 변경사항만 업데이트 (데이터 유지)
     show-sql: true
     properties:
       hibernate:

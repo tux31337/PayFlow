@@ -1,8 +1,15 @@
 package com.truvis.transaction.application;
 
-import com.truvis.transaction.domain.*;
+import com.truvis.transaction.domain.Price;
+import com.truvis.transaction.domain.Quantity;
+import com.truvis.transaction.domain.StockCode;
+import com.truvis.transaction.domain.Transaction;
+import com.truvis.transaction.domain.TransactionType;
+import com.truvis.transaction.event.TransactionCompletedEvent;
+import com.truvis.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +26,11 @@ import java.util.List;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 거래 실행
+     * - 거래 생성 → 저장 → 이벤트 발행
      *
      * @return 실행된 거래
      */
@@ -34,7 +43,7 @@ public class TransactionService {
             String price
     ) {
         // 1. 도메인 객체 생성 (비즈니스 규칙 검증 포함)
-        Transaction transaction = Transaction.execute(
+        Transaction transaction = Transaction.create(
                 userId,
                 StockCode.of(stockCode),
                 type,
@@ -44,13 +53,20 @@ public class TransactionService {
 
         log.debug("거래 객체 생성: {}", transaction.getDescription());
 
-        // 2. 저장 (자동으로 도메인 이벤트 발행!)
+        // 2. 저장
         Transaction saved = transactionRepository.save(transaction);
 
-        log.info("거래 실행 완료: id={}, type={}, amount={}원",
-                saved.getId(), 
+        log.info("거래 저장 완료: id={}, type={}, amount={}원",
+                saved.getId(),
                 type.getDisplayName(),
                 saved.getTotalAmount().getValue());
+
+        // 3. 🎯 도메인 이벤트 발행 (명시적!)
+        eventPublisher.publishEvent(
+                TransactionCompletedEvent.of(saved)
+        );
+
+        log.debug("거래 완료 이벤트 발행: transactionId={}", saved.getId());
 
         return saved;
     }
