@@ -1,8 +1,8 @@
 package com.truvis.transaction.application;
 
-import com.truvis.transaction.domain.Price;
-import com.truvis.transaction.domain.Quantity;
-import com.truvis.transaction.domain.StockCode;
+import com.truvis.common.model.vo.Price;
+import com.truvis.common.model.vo.Quantity;
+import com.truvis.common.model.vo.StockCode;
 import com.truvis.transaction.domain.Transaction;
 import com.truvis.transaction.domain.TransactionType;
 import com.truvis.transaction.event.TransactionCompletedEvent;

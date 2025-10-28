@@ -1,5 +1,8 @@
 package com.truvis.transaction.domain;
 
+import com.truvis.common.model.vo.Price;
+import com.truvis.common.model.vo.Quantity;
+import com.truvis.stock.domain.Stock;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +16,7 @@ class TransactionTest {
     void createBuyTransaction() {
         // given
         Long userId = 100L;
-        StockCode stockCode = StockCode.of("005930");
+        Stock.StockCode stockCode = Stock.StockCode.of("005930");
         TransactionType type = TransactionType.BUY;
         Quantity quantity = Quantity.of(10);
         Price price = Price.of("70000");
@@ -40,7 +43,7 @@ class TransactionTest {
     void createSellTransaction() {
         // given
         Long userId = 100L;
-        StockCode stockCode = StockCode.of("005930");
+        Stock.StockCode stockCode = Stock.StockCode.of("005930");
         TransactionType type = TransactionType.SELL;
         Quantity quantity = Quantity.of(5);
         Price price = Price.of("75000");
@@ -63,7 +66,7 @@ class TransactionTest {
         // given
         Transaction transaction = Transaction.create(
                 100L,
-                StockCode.of("005930"),
+                Stock.StockCode.of("005930"),
                 TransactionType.BUY,
                 Quantity.of(10),
                 Price.of("70000")
@@ -82,7 +85,7 @@ class TransactionTest {
         // given
         Transaction transaction = Transaction.create(
                 100L,
-                StockCode.of("005930"),
+                Stock.StockCode.of("005930"),
                 TransactionType.SELL,
                 Quantity.of(5),
                 Price.of("70000")
@@ -101,7 +104,7 @@ class TransactionTest {
         // given
         Transaction transaction = Transaction.create(
                 100L,
-                StockCode.of("005930"),
+                Stock.StockCode.of("005930"),
                 TransactionType.BUY,
                 Quantity.of(10),
                 Price.of("70000")

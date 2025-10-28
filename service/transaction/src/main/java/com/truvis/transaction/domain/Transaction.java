@@ -1,6 +1,10 @@
 package com.truvis.transaction.domain;
 
 import com.truvis.common.model.AggregateRoot;
+import com.truvis.common.model.vo.Money;
+import com.truvis.common.model.vo.Price;
+import com.truvis.common.model.vo.Quantity;
+import com.truvis.common.model.vo.StockCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

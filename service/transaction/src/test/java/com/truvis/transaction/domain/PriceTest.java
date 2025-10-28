@@ -1,5 +1,8 @@
 package com.truvis.transaction.domain;
 
+import com.truvis.common.model.vo.Money;
+import com.truvis.common.model.vo.Price;
+import com.truvis.common.model.vo.Quantity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
