@@ -1,11 +1,10 @@
 package com.truvis.transaction.domain;
 
-import com.truvis.common.model.DomainEvent;
-import com.truvis.transaction.event.TransactionCompletedEvent;
+import com.truvis.common.model.vo.Price;
+import com.truvis.common.model.vo.Quantity;
+import com.truvis.stock.domain.Stock;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -17,13 +16,13 @@ class TransactionTest {
     void createBuyTransaction() {
         // given
         Long userId = 100L;
-        StockCode stockCode = StockCode.of("005930");
+        Stock.StockCode stockCode = Stock.StockCode.of("005930");
         TransactionType type = TransactionType.BUY;
         Quantity quantity = Quantity.of(10);
         Price price = Price.of("70000");
 
         // when
-        Transaction transaction = Transaction.execute(
+        Transaction transaction = Transaction.create(
                 userId, stockCode, type, quantity, price
         );
 
@@ -44,13 +43,13 @@ class TransactionTest {
     void createSellTransaction() {
         // given
         Long userId = 100L;
-        StockCode stockCode = StockCode.of("005930");
+        Stock.StockCode stockCode = Stock.StockCode.of("005930");
         TransactionType type = TransactionType.SELL;
         Quantity quantity = Quantity.of(5);
         Price price = Price.of("75000");
 
         // when
-        Transaction transaction = Transaction.execute(
+        Transaction transaction = Transaction.create(
                 userId, stockCode, type, quantity, price
         );
 
@@ -62,39 +61,12 @@ class TransactionTest {
     }
 
     @Test
-    @DisplayName("거래 생성 시 도메인 이벤트 발행")
-    void createTransactionWithDomainEvent() {
-        // given
-        Long userId = 100L;
-        StockCode stockCode = StockCode.of("005930");
-
-        // when
-        Transaction transaction = Transaction.execute(
-                userId,
-                stockCode,
-                TransactionType.BUY,
-                Quantity.of(10),
-                Price.of("70000")
-        );
-
-        // then
-        List<DomainEvent> events = transaction.getDomainEvents();
-        assertThat(events).hasSize(1);
-        assertThat(events.get(0)).isInstanceOf(TransactionCompletedEvent.class);
-
-        TransactionCompletedEvent event = (TransactionCompletedEvent) events.get(0);
-        assertThat(event.getUserId()).isEqualTo(100L);
-        assertThat(event.getStockCode()).isEqualTo("005930");
-        assertThat(event.getQuantity()).isEqualTo(10);
-    }
-
-    @Test
     @DisplayName("수량 변화 계산 - 매수는 +")
     void getQuantityChangeForBuy() {
         // given
-        Transaction transaction = Transaction.execute(
+        Transaction transaction = Transaction.create(
                 100L,
-                StockCode.of("005930"),
+                Stock.StockCode.of("005930"),
                 TransactionType.BUY,
                 Quantity.of(10),
                 Price.of("70000")
@@ -111,9 +83,9 @@ class TransactionTest {
     @DisplayName("수량 변화 계산 - 매도는 -")
     void getQuantityChangeForSell() {
         // given
-        Transaction transaction = Transaction.execute(
+        Transaction transaction = Transaction.create(
                 100L,
-                StockCode.of("005930"),
+                Stock.StockCode.of("005930"),
                 TransactionType.SELL,
                 Quantity.of(5),
                 Price.of("70000")
@@ -130,9 +102,9 @@ class TransactionTest {
     @DisplayName("거래 설명 문자열 생성")
     void getDescription() {
         // given
-        Transaction transaction = Transaction.execute(
+        Transaction transaction = Transaction.create(
                 100L,
-                StockCode.of("005930"),
+                Stock.StockCode.of("005930"),
                 TransactionType.BUY,
                 Quantity.of(10),
                 Price.of("70000")

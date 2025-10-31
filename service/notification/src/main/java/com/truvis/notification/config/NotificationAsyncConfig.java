@@ -1,7 +1,9 @@
 package com.truvis.notification.config;
 
+import com.truvis.common.config.MdcTaskDecorator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -20,6 +22,7 @@ import java.util.concurrent.Executor;
 public class NotificationAsyncConfig implements AsyncConfigurer {
 
     @Override
+    @Bean(name = "notificationExecutor")
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
@@ -29,9 +32,12 @@ public class NotificationAsyncConfig implements AsyncConfigurer {
         executor.setQueueCapacity(500);   // 큐 500개
         executor.setThreadNamePrefix("notification-async-");
 
+        // 🎯 MDC와 SecurityContext 전달 (비동기 작업에서도 로그 추적 가능)
+        executor.setTaskDecorator(new MdcTaskDecorator());
+
         // 🎯 거부 정책
         executor.setRejectedExecutionHandler((r, e) -> {
-            log.error("알림 큐가 가득 찼습니다!");
+            log.error("알림 큐가 가득 참");
         });
 
         // 🎯 종료 시 대기
@@ -40,7 +46,7 @@ public class NotificationAsyncConfig implements AsyncConfigurer {
 
         executor.initialize();
 
-        log.info("🚀 비동기 Executor 설정 완료: core={}, max={}, queue={}",
+        log.info("비동기 Executor 초기화: core={}, max={}, queue={}",
                 executor.getCorePoolSize(),
                 executor.getMaxPoolSize(),
                 executor.getQueueCapacity());

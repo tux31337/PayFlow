@@ -1,11 +1,8 @@
-package com.truvis.transaction.infrastructure;
+package com.truvis.transaction.repository;
 
-import com.truvis.common.model.DomainEvent;
 import com.truvis.transaction.domain.Transaction;
-import com.truvis.transaction.domain.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * JPA Repository 인터페이스
+ * Spring Data JPA Repository 인터페이스
  * - Spring Data JPA가 자동으로 구현체 생성
  */
 interface TransactionJpaRepository extends JpaRepository<Transaction, Long> {
@@ -37,44 +34,29 @@ interface TransactionJpaRepository extends JpaRepository<Transaction, Long> {
 }
 
 /**
- * Transaction Repository 구현체 (Adapter)
- * - JPA 기술 구현
- * - 도메인 이벤트 자동 발행 (🎯 핵심!)
+ * Transaction Repository JPA 구현체
+ * - JPA 기술로 구현
+ * - 영속성 처리 담당
  */
 @Repository
 @Slf4j
 @RequiredArgsConstructor
-public class JpaTransactionRepositoryAdapter implements TransactionRepository {
+public class JpaTransactionRepository implements TransactionRepository {
 
     private final TransactionJpaRepository jpaRepository;
-    private final ApplicationEventPublisher eventPublisher;  // 이벤트 발행기
 
     /**
-     * 거래 저장 + 도메인 이벤트 발행
+     * 거래 저장
      */
     @Override
     public Transaction save(Transaction transaction) {
-        // 1. DB 저장
-        Transaction savedTransaction = jpaRepository.save(transaction);
-
-        // 2. 🎯 도메인 이벤트 발행!
-        List<DomainEvent> events = savedTransaction.getDomainEvents();
-
-        if (!events.isEmpty()) {
-            log.info("📢 도메인 이벤트 발행 시작: {} 개", events.size());
-
-            events.forEach(event -> {
-                log.info("  → 발행: {}", event.getClass().getSimpleName());
-                eventPublisher.publishEvent(event);
-            });
-
-            // 3. 이벤트 클리어
-            savedTransaction.clearDomainEvents();
-
-            log.info("✅ 도메인 이벤트 발행 완료");
-        }
-
-        return savedTransaction;
+        Transaction saved = jpaRepository.save(transaction);
+        
+        log.debug("거래 저장: id={}, type={}", 
+                saved.getId(), 
+                saved.getType().getDisplayName());
+        
+        return saved;
     }
 
     @Override

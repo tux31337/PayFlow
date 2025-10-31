@@ -4,7 +4,7 @@ import com.truvis.common.exception.MemberException;
 import com.truvis.user.domain.User;
 import com.truvis.user.model.SignUpRequest;
 import com.truvis.user.model.SignUpResponse;
-import com.truvis.user.domain.UserRepository;
+import com.truvis.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,8 +36,6 @@ public class UserService {
      */
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
-        log.info("회원가입 시작: email={}", request.getEmail());
-
         // 1. 비밀번호 확인 검증
         validatePasswordConfirm(request.getPassword(), request.getPasswordConfirm());
 
@@ -75,7 +73,7 @@ public class UserService {
 
         log.info("회원가입 완료: userId={}, email={}", savedUser.getId(), savedUser.getEmailValue());
 
-        // 8. 응답 생성
+        // 9. 응답 생성
         return SignUpResponse.of(
                 savedUser.getId(),
                 savedUser.getEmailValue(),

@@ -43,3 +43,9 @@ docker-compose.override.yml
 ### Custom ###
 **/application-local.yml
 **/application-local.properties
+
+### H2 Database ###
+/data/
+*.db
+*.trace.db
+*.lock.db

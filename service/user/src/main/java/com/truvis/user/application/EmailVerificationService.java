@@ -8,9 +8,9 @@ import com.truvis.notification.event.NotificationRequestedEvent;
 import com.truvis.notification.infrastructure.NotificationStatusRepository;
 import com.truvis.user.domain.Email;
 import com.truvis.user.domain.EmailVerification;
-import com.truvis.user.domain.EmailVerificationRepository;
-import com.truvis.user.domain.UserRepository;
-import com.truvis.user.infrastructure.RedisEmailVerificationRepository;
+import com.truvis.user.repository.EmailVerificationRepository;
+import com.truvis.user.repository.RedisEmailVerificationRepository;
+import com.truvis.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -54,7 +54,7 @@ public class EmailVerificationService {
         // 4. 저장
         verificationRepository.save(verification);
 
-        // 5. 🎯 이메일 발송 이벤트 발행 (비동기!)
+        // 5. 이메일 발송 이벤트 발행 (비동기!)
         NotificationRequestedEvent event = NotificationRequestedEvent.of(
                 email.getValue(),
                 NotificationChannel.EMAIL,
@@ -64,8 +64,7 @@ public class EmailVerificationService {
 
         eventPublisher.publishEvent(event);
 
-        log.info("✅ 인증번호 발송 이벤트 발행 완료: email={}", email.getValue());
-        // 이제 즉시 반환! 이메일은 백그라운드에서 발송됨
+        log.info("인증번호 발송 이벤트 발행: email={}", email.getValue());
     }
 
     /**
@@ -79,12 +78,11 @@ public class EmailVerificationService {
         // 2. 알림 발송 상태 확인 및 대기
         waitForEmailSent(emailValue);
 
-
-        // 2. 도메인 객체 조회
+        // 3. 도메인 객체 조회
         EmailVerification verification = verificationRepository.findByEmail(email)
                 .orElseThrow(() -> EmailVerificationException.expiredCode());
 
-        // 3. 도메인 객체에게 검증 요청!
+        // 4. 도메인 객체에게 검증 요청!
         try {
             verification.verify(codeValue);
         } catch (IllegalStateException e) {
@@ -93,24 +91,22 @@ public class EmailVerificationService {
             throw EmailVerificationException.invalidCode();
         }
 
-        // 4. 인증 완료 상태 저장 (VERIFIED로 변경)
+        // 5. 인증 완료 상태 저장 (VERIFIED로 변경)
         verificationRepository.save(verification);
 
-        // ⭐ 5. 인증 완료 마크 저장
+        // 6. 인증 완료 마크 저장
         if (verificationRepository instanceof RedisEmailVerificationRepository) {
             ((RedisEmailVerificationRepository) verificationRepository)
                     .saveVerifiedStatus(email);
-            log.info("인증 완료 마크 저장: email={}", email.getValue());
         }
 
         log.info("이메일 인증 완료: email={}", email.getValue());
 
-        // 6. 이메일 반환
         return email.getValue();
     }
 
     /**
-     * 🎯 이메일 발송 완료 대기 (스마트 폴링)
+     * 이메일 발송 완료 대기 (스마트 폴링)
      * - 최대 5초 대기
      * - 0.5초마다 상태 확인
      */
@@ -119,48 +115,39 @@ public class EmailVerificationService {
         final long POLL_INTERVAL_MS = 500;  // 0.5초
 
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-            // Redis에서 알림 상태 조회
             Notification notification = notificationStatusRepository.findLatestByRecipient(email);
 
             if (notification == null) {
-                // 알림이 없으면 바로 진행 (Redis에 없을 수도 있음)
                 log.debug("알림 상태 없음, 검증 진행: email={}", email);
                 return;
             }
 
             if (notification.isSent()) {
-                // ✅ 발송 완료! 검증 진행
-                log.info("✅ 이메일 발송 완료 확인: email={}, attempt={}", email, attempt);
+                log.debug("이메일 발송 완료: email={}, attempts={}", email, attempt);
                 return;
             }
 
             if (notification.isFailed()) {
-                // ❌ 발송 실패
-                log.warn("❌ 이메일 발송 실패: email={}", email);
+                log.warn("이메일 발송 실패: email={}", email);
                 throw EmailVerificationException.emailSendFailed(email);
             }
 
             if (notification.isProcessing()) {
-                // ⏳ 발송 중... 대기
-                log.debug("⏳ 이메일 발송 중... 대기: email={}, status={}, attempt={}/{}",
-                        email, notification.getStatus(), attempt, MAX_ATTEMPTS);
+                log.debug("이메일 발송 대기 중: email={}, attempt={}/{}", 
+                        email, attempt, MAX_ATTEMPTS);
 
                 try {
                     Thread.sleep(POLL_INTERVAL_MS);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    log.error("대기 중 인터럽트: email={}", email, e);
+                    log.error("이메일 발송 대기 인터럽트: email={}", email);
                     throw new RuntimeException("이메일 발송 대기 실패", e);
                 }
             }
         }
 
-        // ⚠️ 5초 넘어도 발송 안 됨
-        log.warn("⚠️ 이메일 발송 타임아웃: email={}, maxWait={}초",
+        log.warn("이메일 발송 타임아웃: email={}, maxWait={}초",
                 email, (MAX_ATTEMPTS * POLL_INTERVAL_MS) / 1000);
-
-        // 타임아웃이어도 검증은 시도 (Redis에 코드가 있을 수도)
-        // 사용자 경험을 위해 예외는 던지지 않음
     }
 
     /**
@@ -178,7 +165,7 @@ public class EmailVerificationService {
     public void clearVerifiedEmail(String emailValue) {
         Email email = Email.of(emailValue);
         verificationRepository.delete(email);
-        log.info("인증 정보 삭제: email={}", email.getValue());
+        log.debug("인증 정보 삭제: email={}", email.getValue());
     }
 
     /**
