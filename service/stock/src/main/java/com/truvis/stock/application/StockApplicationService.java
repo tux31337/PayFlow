@@ -325,8 +325,9 @@ public class StockApplicationService {
                 stock.getName().getValue(),
                 stock.getMarket().name(),
                 stock.getSector().getValue(),
-                stock.getCurrentPrice().getValue().toString(),  // BigDecimal → String
-                stock.getPriceUpdatedAt()
+                stock.getCurrentPrice().formatKorean(),  // "71,000" 포맷
+                stock.getPriceUpdatedAt(),
+                stock.getCreatedAt()  // createdAt 추가
         );
     }
 
@@ -352,8 +353,7 @@ public class StockApplicationService {
                 formatChangeRate(changeRate),              // "+0.71%"
 
                 stock.getPriceUpdatedAt(),
-                stock.isKospi(),
-                stock.isKosdaq()
+                stock.getCreatedAt()  // createdAt 추가
         );
     }
 
@@ -367,7 +367,7 @@ public class StockApplicationService {
      */
     private String formatChangeAmount(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) > 0) {
-            return "+" + amount.toString();
+            return "+" + amount;
         } else if (amount.compareTo(BigDecimal.ZERO) < 0) {
             return amount.toString();  // 이미 - 부호 포함
         } else {

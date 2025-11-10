@@ -1,20 +1,100 @@
 package com.truvis.controller.stock;
 
+
+import com.truvis.stock.application.StockApplicationService;
+import com.truvis.stock.domain.Market;
+import com.truvis.stock.model.StockDetailResponse;
+import com.truvis.stock.model.StockResponse;
+import com.truvis.stock.model.StockSearchResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 /**
- * 종목 REST API
- * - GET /api/stocks/search - 종목 검색
- * - GET /api/stocks/{symbol} - 종목 상세 조회
- * - POST /api/stocks/watchlist - 관심 종목 추가
- * - DELETE /api/stocks/watchlist/{symbol} - 관심 종목 제거
- * 
- * TODO: 구현 필요
- * - @RestController
- * - @RequestMapping("/api/stocks")
- * - API 엔드포인트 구현
+ * 종목 API 컨트롤러
  */
+@RestController
+@RequestMapping("/api/stocks")
+@RequiredArgsConstructor
 public class StockController {
-    
-    // TODO: ApplicationService 의존성 주입
-    
-    // TODO: API 엔드포인트 구현
+
+    private final StockApplicationService stockApplicationService;
+
+    /**
+     * 종목 검색 (자동완성)
+     * GET /api/stocks/search?keyword=삼성
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<StockSearchResponse>> searchStocks(
+            @RequestParam String keyword
+    ) {
+        List<StockSearchResponse> results = stockApplicationService.searchStocks(keyword);
+        return ResponseEntity.ok(results);
+    }
+
+    /**
+     * 종목 상세 조회
+     * GET /api/stocks/{stockCode}
+     */
+    @GetMapping("/{stockCode}")
+    public ResponseEntity<StockDetailResponse> getStockDetail(
+            @PathVariable String stockCode
+    ) {
+        StockDetailResponse response = stockApplicationService.getStockDetail(stockCode);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 시장별 종목 조회
+     * GET /api/stocks/market/{market}
+     */
+    @GetMapping("/market/{market}")
+    public ResponseEntity<List<StockResponse>> getStocksByMarket(
+            @PathVariable Market market
+    ) {
+        List<StockResponse> responses = stockApplicationService.getStocksByMarket(market);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 여러 종목 조회
+     * POST /api/stocks/batch
+     */
+    @PostMapping("/batch")
+    public ResponseEntity<List<StockResponse>> getStocks(
+            @RequestBody List<String> stockCodes
+    ) {
+        List<StockResponse> responses = stockApplicationService.getStocks(stockCodes);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 종목 등록 (관리자)
+     * POST /api/stocks
+     */
+    @PostMapping
+    public ResponseEntity<StockResponse> registerStock(
+            @RequestBody RegisterStockRequest request
+    ) {
+        StockResponse response = stockApplicationService.registerStock(
+                request.getStockCode(),
+                request.getName(),
+                request.getMarket(),
+                request.getSector()
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    // Request DTO
+    @lombok.Getter
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class RegisterStockRequest {
+        private String stockCode;
+        private String name;
+        private Market market;
+        private String sector;
+    }
 }
