@@ -8,11 +8,13 @@ import com.truvis.stock.model.StockSearchResponse;
 import com.truvis.stock.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +31,12 @@ public class StockApplicationService {
 
     private final StockRepository stockRepository;
     private final StockPriceProvider stockPriceProvider;  // 가격 조회 Provider
+    private final RedisTemplate<String, String> redisTemplate;
+    
+    /**
+     * Redis 키 접두사
+     */
+    private static final String REDIS_PRICE_PREFIX = "stock:price:";
 
     // ==================== 조회 ====================
 
@@ -56,7 +64,7 @@ public class StockApplicationService {
     /**
      * 종목 상세 조회 (실시간 가격 포함)
      * - Repository에서 기본 정보 조회
-     * - Provider로 실시간 가격 조회
+     * - Redis에서 최신 가격 조회 (우선), 없으면 DB 또는 Provider 사용
      *
      * @param stockCodeValue 종목 코드 (예: "005930")
      * @return 종목 상세 정보
@@ -69,16 +77,125 @@ public class StockApplicationService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "종목을 찾을 수 없습니다: " + stockCodeValue));
 
-        // 실시간 가격 조회
-        CurrentPrice realtimePrice = stockPriceProvider.getCurrentPrice(stockCode);
+        // 1. Redis에서 최신 가격 조회 (우선)
+        CurrentPrice currentPrice = getCurrentPriceFromRedis(stockCode)
+                .orElseGet(() -> {
+                    // 2. Redis에 없으면 DB 값 사용
+                    CurrentPrice dbPrice = stock.getCurrentPrice();
+                    
+                    // 3. DB 가격이 오래되었으면 Provider로 조회
+                    if (stock.isPriceStale()) {
+                        log.debug("가격이 오래됨, Provider로 조회: stockCode={}", stockCodeValue);
+                        CurrentPrice providerPrice = stockPriceProvider.getCurrentPrice(stockCode);
+                        // Redis에도 저장 (다음 조회 시 빠르게)
+                        savePriceToRedis(stockCode, providerPrice);
+                        return providerPrice;
+                    }
+                    
+                    return dbPrice;
+                });
 
-        // 가격이 오래되었으면 업데이트
-        if (stock.isPriceStale()) {
-            updateStockPrice(stock, realtimePrice);
-        }
-
-        return toDetailResponse(stock, realtimePrice);
+        return toDetailResponse(stock, currentPrice);
     }
+    
+    /**
+     * Redis에서 최신 가격 조회
+     */
+    private Optional<CurrentPrice> getCurrentPriceFromRedis(StockCode stockCode) {
+        try {
+            String redisKey = REDIS_PRICE_PREFIX + stockCode.getValue();
+            String priceStr = redisTemplate.opsForValue().get(redisKey);
+            
+            if (priceStr != null) {
+                long price = Long.parseLong(priceStr);
+                log.debug("Redis에서 가격 조회: stockCode={}, price={}", 
+                        stockCode.getValue(), price);
+                return Optional.of(CurrentPrice.of(price));
+            }
+        } catch (Exception e) {
+            log.warn("Redis 가격 조회 실패: stockCode={}, error={}", 
+                    stockCode.getValue(), e.getMessage());
+        }
+        
+        return Optional.empty();
+    }
+    
+    /**
+     * Redis에 가격 저장
+     */
+    private void savePriceToRedis(StockCode stockCode, CurrentPrice price) {
+        try {
+            String redisKey = REDIS_PRICE_PREFIX + stockCode.getValue();
+            redisTemplate.opsForValue().set(
+                    redisKey,
+                    String.valueOf(price.getValue().longValue()),
+                    1,
+                    java.util.concurrent.TimeUnit.HOURS
+            );
+        } catch (Exception e) {
+            log.warn("Redis 가격 저장 실패: stockCode={}, error={}", 
+                    stockCode.getValue(), e.getMessage());
+        }
+    }
+    
+    /**
+     * Redis에서 모든 가격을 DB에 동기화 (배치)
+     * - 스케줄러에서 호출
+     */
+    @Transactional
+    public void syncPricesFromRedisToDatabase() {
+        log.info("🔄 Redis → DB 가격 동기화 시작");
+        
+        try {
+            // Redis에서 모든 stock:price:* 키 조회
+            String pattern = REDIS_PRICE_PREFIX + "*";
+            var keys = redisTemplate.keys(pattern);
+            
+            if (keys == null || keys.isEmpty()) {
+                log.debug("동기화할 Redis 가격 없음");
+                return;
+            }
+            
+            int syncedCount = 0;
+            int failedCount = 0;
+            
+            for (String redisKey : keys) {
+                try {
+                    // 종목 코드 추출
+                    String stockCodeValue = redisKey.substring(REDIS_PRICE_PREFIX.length());
+                    StockCode stockCode = StockCode.of(stockCodeValue);
+                    
+                    // Redis에서 가격 조회
+                    String priceStr = redisTemplate.opsForValue().get(redisKey);
+                    if (priceStr == null) {
+                        continue;
+                    }
+                    
+                    long price = Long.parseLong(priceStr);
+                    CurrentPrice currentPrice = CurrentPrice.of(price);
+                    
+                    // Stock 엔티티 조회 및 업데이트
+                    Stock stock = stockRepository.findByStockCode(stockCode).orElse(null);
+                    if (stock != null) {
+                        stock.updatePrice(currentPrice);
+                        // Dirty Checking으로 자동 저장
+                        syncedCount++;
+                    }
+                    
+                } catch (Exception e) {
+                    failedCount++;
+                    log.warn("가격 동기화 실패: key={}, error={}", redisKey, e.getMessage());
+                }
+            }
+            
+            log.info("✅ Redis → DB 동기화 완료: total={}, synced={}, failed={}", 
+                    keys.size(), syncedCount, failedCount);
+            
+        } catch (Exception e) {
+            log.error("❌ Redis → DB 동기화 실패: {}", e.getMessage(), e);
+        }
+    }
+    
 
     /**
      * 시장별 종목 조회
@@ -201,6 +318,9 @@ public class StockApplicationService {
 
         // 현재가 조회
         CurrentPrice currentPrice = stockPriceProvider.getCurrentPrice(stockCode);
+        
+        // Redis에도 저장 (다음 조회 시 빠르게)
+        savePriceToRedis(stockCode, currentPrice);
 
         // 도메인 객체 생성
         Stock stock = Stock.create(
@@ -235,6 +355,9 @@ public class StockApplicationService {
 
         // 실시간 가격 조회
         CurrentPrice newPrice = stockPriceProvider.getCurrentPrice(stockCode);
+        
+        // Redis에도 저장 (다음 조회 시 빠르게)
+        savePriceToRedis(stockCode, newPrice);
 
         // 도메인 메서드로 가격 업데이트
         stock.updatePrice(newPrice);
@@ -259,6 +382,10 @@ public class StockApplicationService {
         for (Stock stock : allStocks) {
             try {
                 CurrentPrice newPrice = stockPriceProvider.getCurrentPrice(stock.getStockCode());
+                
+                // Redis에도 저장 (다음 조회 시 빠르게)
+                savePriceToRedis(stock.getStockCode(), newPrice);
+                
                 stock.updatePrice(newPrice);
                 updatedCount++;
             } catch (Exception e) {

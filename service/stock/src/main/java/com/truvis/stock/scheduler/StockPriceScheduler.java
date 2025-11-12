@@ -85,4 +85,21 @@ public class StockPriceScheduler {
             log.error("❌ [스케줄러] 장 시작 전 가격 업데이트 실패: {}", e.getMessage(), e);
         }
     }
+
+    /**
+     * Redis → DB 가격 동기화
+     * - 1분마다 실행
+     * - WebSocket으로 받은 실시간 가격을 DB에 반영
+     * - DB 부하 최소화를 위해 배치로 처리
+     */
+    @Scheduled(fixedDelay = 60000)  // 1분
+    public void syncPricesFromRedis() {
+        log.debug("🔄 [스케줄러] Redis → DB 가격 동기화 시작");
+        
+        try {
+            stockApplicationService.syncPricesFromRedisToDatabase();
+        } catch (Exception e) {
+            log.error("❌ [스케줄러] Redis → DB 동기화 실패: {}", e.getMessage(), e);
+        }
+    }
 }

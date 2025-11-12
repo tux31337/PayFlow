@@ -20,17 +20,17 @@ import java.util.Map;
 /**
  * 한국투자증권 OpenAPI 주식 가격 제공자
  * - 실제 API 호출하여 실시간 주가 조회
- * - 운영 환경에서 사용
+ * - 로컬 및 운영 환경에서 사용
  *
  * API 문서: https://apiportal.koreainvestment.com
  *
  * 활성화 조건:
+ * - spring.profiles.active=local
  * - spring.profiles.active=prod
  */
 @Slf4j
 @Component
-//@Profile("prod")  // 운영 환경에서만 활성화
-@Profile({"local", "dev", "test"})  // 로컬/개발/테스트 환경에서만 활성화
+@Profile({"local", "prod"})  // 로컬 및 운영 환경에서 활성화
 public class KisApiStockPriceProvider implements StockPriceProvider {
 
     private static final String BASE_URL = "https://openapi.koreainvestment.com:9443";

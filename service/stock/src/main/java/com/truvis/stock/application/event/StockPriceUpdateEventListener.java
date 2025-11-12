@@ -8,6 +8,7 @@ import com.truvis.stock.repository.StockPriceHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 주식 가격 변경 이벤트 리스너
@@ -29,6 +31,13 @@ public class StockPriceUpdateEventListener {
     
     private final SseEmitterManager sseEmitterManager;
     private final StockPriceHistoryRepository historyRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+    
+    /**
+     * Redis 키 접두사
+     */
+    private static final String REDIS_PRICE_PREFIX = "stock:price:";
+    private static final long REDIS_PRICE_TTL_HOURS = 1;  // 1시간 TTL
     
     /**
      * 배치 저장용 버퍼
@@ -46,7 +55,16 @@ public class StockPriceUpdateEventListener {
         try {
             String stockCode = event.getStockCode().getValue();
             
-            // 1. SSE 전송
+            // 1. Redis에 최신 가격 저장 (빠른 조회를 위해)
+            String redisKey = REDIS_PRICE_PREFIX + stockCode;
+            redisTemplate.opsForValue().set(
+                    redisKey,
+                    String.valueOf(event.getCurrentPrice()),
+                    REDIS_PRICE_TTL_HOURS,
+                    TimeUnit.HOURS
+            );
+            
+            // 2. SSE 전송
             StockPriceUpdateResponse response = StockPriceUpdateResponse.builder()
                     .stockCode(stockCode)
                     .currentPrice(event.getCurrentPrice())
@@ -58,7 +76,7 @@ public class StockPriceUpdateEventListener {
             
             sseEmitterManager.sendToStock(stockCode, response);
             
-            // 2. 히스토리 버퍼에 추가
+            // 3. 히스토리 버퍼에 추가
             StockPriceHistory history = StockPriceHistory.from(
                     stockCode,
                     event.getTradeTime(),

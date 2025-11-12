@@ -28,10 +28,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * KIS WebSocket 클라이언트
  * - 실시간 주식 체결가 수신
  * - 도메인 이벤트 발행
+ * 
+ * 활성화 조건:
+ * - spring.profiles.active=local
+ * - spring.profiles.active=prod
  */
 @Slf4j
 @Component
-@Profile({"local", "dev", "test"})
+@Profile({"local", "prod"})  // 로컬 및 운영 환경에서 활성화
 public class KisWebSocketClient implements WebSocketHandler {
     
     private static final String WS_URL = "ws://ops.koreainvestment.com:21000";
