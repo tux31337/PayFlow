@@ -40,7 +40,7 @@ public class StockPriceUpdateEventListener {
      * 가격 변경 이벤트 처리
      * - 비동기로 처리하여 이벤트 발행자 차단 방지
      */
-    @Async
+    @Async("stockExecutor")
     @EventListener
     public void handleStockPriceUpdate(StockPriceUpdateEvent event) {
         try {
