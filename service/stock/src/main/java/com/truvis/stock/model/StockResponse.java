@@ -13,6 +13,7 @@ public class StockResponse {
     private String name;
     private String market;
     private String sector;
-    private String currentPrice;      // "71000" or "180.50"
+    private String currentPrice;
     private LocalDateTime priceUpdatedAt;
+    private LocalDateTime createdAt;
 }

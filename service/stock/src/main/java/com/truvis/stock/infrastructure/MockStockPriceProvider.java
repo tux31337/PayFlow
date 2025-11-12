@@ -24,7 +24,8 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 @Slf4j
 @Component
-@Profile({"dev", "test"})  // 개발/테스트 환경에서만 활성화
+@Profile("prod")  // 운영 환경에서만 활성화
+//@Profile({"local", "dev", "test"})  // 로컬/개발/테스트 환경에서만 활성화
 public class MockStockPriceProvider implements StockPriceProvider {
 
     /**

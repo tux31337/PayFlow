@@ -29,7 +29,8 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-@Profile("prod")  // 운영 환경에서만 활성화
+//@Profile("prod")  // 운영 환경에서만 활성화
+@Profile({"local", "dev", "test"})  // 로컬/개발/테스트 환경에서만 활성화
 public class KisApiStockPriceProvider implements StockPriceProvider {
 
     private static final String BASE_URL = "https://openapi.koreainvestment.com:9443";
@@ -50,6 +51,19 @@ public class KisApiStockPriceProvider implements StockPriceProvider {
      * - 만료되면 자동 재발급
      */
     private KisTokenResponse currentToken;
+    
+    /**
+     * 마지막 API 호출 시각
+     * - Rate Limit 방지용
+     */
+    private long lastApiCallTime = 0;
+    
+    /**
+     * API 호출 최소 간격 (밀리초)
+     * - KIS API: 초당 최대 5회 → 200ms 간격 필요
+     * - 안전을 위해 500ms로 설정 (여유있게!)
+     */
+    private static final long MIN_API_CALL_INTERVAL = 500;
 
     public KisApiStockPriceProvider() {
         this.restTemplate = new RestTemplate();
@@ -65,15 +79,18 @@ public class KisApiStockPriceProvider implements StockPriceProvider {
             // 1. 토큰 확인 및 갱신
             ensureValidToken();
 
-            // 2. API 호출
+            // 2. Rate Limit 방지 (초당 5회 제한)
+            rateLimitDelay();
+
+            // 3. API 호출
             KisApiResponse response = callPriceApi(code);
 
-            // 3. 응답 검증
+            // 4. 응답 검증
             if (!"0".equals(response.getRtCd())) {
                 throw new RuntimeException("API 오류: " + response.getMsg1());
             }
 
-            // 4. 가격 파싱
+            // 5. 가격 파싱
             String priceStr = response.getOutput().getStckPrpr();
             long price = Long.parseLong(priceStr);
 
@@ -138,6 +155,28 @@ public class KisApiStockPriceProvider implements StockPriceProvider {
             currentToken = issueToken();
             log.info("[KIS_API] 토큰 발급 완료");
         }
+    }
+    
+    /**
+     * Rate Limit 방지를 위한 대기
+     * - KIS API: 초당 최대 5회 호출
+     * - 마지막 호출 후 250ms 대기
+     */
+    private void rateLimitDelay() {
+        long currentTime = System.currentTimeMillis();
+        long timeSinceLastCall = currentTime - lastApiCallTime;
+        
+        if (timeSinceLastCall < MIN_API_CALL_INTERVAL) {
+            long waitTime = MIN_API_CALL_INTERVAL - timeSinceLastCall;
+            try {
+                log.debug("[KIS_API] Rate Limit 대기: {}ms", waitTime);
+                Thread.sleep(waitTime);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+        lastApiCallTime = System.currentTimeMillis();
     }
 
     /**
