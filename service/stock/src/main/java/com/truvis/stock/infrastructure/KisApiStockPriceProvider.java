@@ -1,5 +1,6 @@
 package com.truvis.stock.infrastructure;
 
+import com.truvis.common.exception.StockException;
 import com.truvis.common.model.vo.StockCode;
 import com.truvis.stock.domain.CurrentPrice;
 import com.truvis.stock.domain.StockPriceProvider;
@@ -87,7 +88,8 @@ public class KisApiStockPriceProvider implements StockPriceProvider {
 
             // 4. 응답 검증
             if (!"0".equals(response.getRtCd())) {
-                throw new RuntimeException("API 오류: " + response.getMsg1());
+                throw StockException.priceProviderApiCallFailed(code, 
+                    new RuntimeException("API 오류: " + response.getMsg1()));
             }
 
             // 5. 가격 파싱
@@ -99,10 +101,10 @@ public class KisApiStockPriceProvider implements StockPriceProvider {
 
         } catch (RestClientException e) {
             log.error("[KIS_API] 네트워크 오류 발생: {}", e.getMessage());
-            throw new RuntimeException("주가 조회 실패: 네트워크 오류", e);
+            throw StockException.priceProviderNetworkError(code, e);
         } catch (Exception e) {
             log.error("[KIS_API] 예상치 못한 오류: {}", e.getMessage(), e);
-            throw new RuntimeException("주가 조회 실패: " + e.getMessage(), e);
+            throw StockException.priceProviderApiCallFailed(code, e);
         }
     }
 
@@ -203,11 +205,12 @@ public class KisApiStockPriceProvider implements StockPriceProvider {
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 return response.getBody();
             } else {
-                throw new RuntimeException("토큰 발급 실패: " + response.getStatusCode());
+                throw StockException.priceProviderApiCallFailed("TOKEN", 
+                    new RuntimeException("토큰 발급 실패: " + response.getStatusCode()));
             }
         } catch (RestClientException e) {
             log.error("[KIS_API] 토큰 발급 실패: {}", e.getMessage());
-            throw new RuntimeException("토큰 발급 실패", e);
+            throw StockException.priceProviderNetworkError("TOKEN", e);
         }
     }
 
@@ -239,7 +242,8 @@ public class KisApiStockPriceProvider implements StockPriceProvider {
         );
 
         if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
-            throw new RuntimeException("API 호출 실패: " + response.getStatusCode());
+            throw StockException.priceProviderApiCallFailed(stockCode, 
+                new RuntimeException("API 호출 실패: " + response.getStatusCode()));
         }
 
         return response.getBody();

@@ -1,5 +1,6 @@
 package com.truvis.stock.application;
 
+import com.truvis.common.exception.StockException;
 import com.truvis.common.model.vo.StockCode;
 import com.truvis.stock.domain.*;
 import com.truvis.stock.model.StockDetailResponse;
@@ -74,8 +75,7 @@ public class StockApplicationService {
 
         StockCode stockCode = StockCode.of(stockCodeValue);
         Stock stock = stockRepository.findByStockCode(stockCode)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "종목을 찾을 수 없습니다: " + stockCodeValue));
+                .orElseThrow(() -> StockException.notFound(stockCode));
 
         // 1. Redis에서 최신 가격 조회 (우선)
         CurrentPrice currentPrice = getCurrentPriceFromRedis(stockCode)
@@ -321,7 +321,7 @@ public class StockApplicationService {
 
         // 중복 체크
         if (stockRepository.existsByStockCode(stockCode)) {
-            throw new IllegalArgumentException("이미 등록된 종목입니다: " + stockCodeValue);
+            throw StockException.alreadyExists(stockCode);
         }
 
         // 현재가 조회
@@ -358,8 +358,7 @@ public class StockApplicationService {
 
         StockCode stockCode = StockCode.of(stockCodeValue);
         Stock stock = stockRepository.findByStockCode(stockCode)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "종목을 찾을 수 없습니다: " + stockCodeValue));
+                .orElseThrow(() -> StockException.notFound(stockCode));
 
         // 실시간 가격 조회
         CurrentPrice newPrice = stockPriceProvider.getCurrentPrice(stockCode);
@@ -418,8 +417,7 @@ public class StockApplicationService {
 
         StockCode stockCode = StockCode.of(stockCodeValue);
         Stock stock = stockRepository.findByStockCode(stockCode)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "종목을 찾을 수 없습니다: " + stockCodeValue));
+                .orElseThrow(() -> StockException.notFound(stockCode));
 
         stockRepository.delete(stock);
 
