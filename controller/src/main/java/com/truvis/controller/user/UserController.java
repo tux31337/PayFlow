@@ -32,8 +32,6 @@ public class UserController {
     public ResponseEntity<ApiResponse<SignUpResponse>> signUp(
             @Valid @RequestBody SignUpRequest request) {
 
-        log.info("회원가입 요청: email={}, name={}", request.getEmail(), request.getName());
-
         SignUpResponse response = userService.signUp(request);
 
         return ResponseEntity

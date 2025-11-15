@@ -1,6 +1,7 @@
-package com.truvis.user.infrastructure;
+package com.truvis.user.repository;
 
 import com.truvis.user.domain.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -9,8 +10,14 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+/**
+ * EmailVerification Repository Redis 구현체
+ * - Redis 기술로 구현
+ * - TTL 기반 임시 저장소
+ */
 @Repository
 @Slf4j
+@RequiredArgsConstructor
 public class RedisEmailVerificationRepository implements EmailVerificationRepository {
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -18,10 +25,6 @@ public class RedisEmailVerificationRepository implements EmailVerificationReposi
     private static final String CODE_PREFIX = "email:code:";
     private static final String VERIFIED_PREFIX = "email:verified:";
     private static final Duration VERIFIED_TTL = Duration.ofMinutes(30);
-
-    public RedisEmailVerificationRepository(RedisTemplate<String, String> redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
 
     @Override
     public void save(EmailVerification verification) {

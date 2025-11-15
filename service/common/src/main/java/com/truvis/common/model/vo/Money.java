@@ -1,4 +1,4 @@
-package com.truvis.transaction.domain;
+package com.truvis.common.model.vo;
 
 import com.truvis.common.model.ValueObject;
 import jakarta.persistence.Column;

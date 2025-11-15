@@ -2,6 +2,7 @@ package com.truvis.common.config;
 
 import com.truvis.common.exception.BusinessException;
 import com.truvis.common.exception.EmailVerificationException;
+import com.truvis.common.exception.StockException;
 import com.truvis.common.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -53,6 +54,43 @@ public class GlobalExceptionHandler {
         log.warn("비즈니스 예외 발생: {}", e.getMessage());
         return ResponseEntity.badRequest()
             .body(ErrorResponse.badRequest(e.getMessage()));
+    }
+    
+    /**
+     * 2-1️⃣ Stock 예외 처리 (에러 코드별 HTTP 상태 매핑)
+     */
+    @ExceptionHandler(StockException.class)
+    public ResponseEntity<ErrorResponse> handleStockException(StockException e) {
+        String errorCode = e.getErrorCode();
+        HttpStatus status;
+        
+        // 에러 코드에 따라 HTTP 상태 코드 결정
+        if ("STOCK_001".equals(errorCode)) {
+            // 종목을 찾을 수 없음
+            status = HttpStatus.NOT_FOUND;
+            log.warn("종목 조회 실패: {}", e.getMessage());
+        } else if ("STOCK_002".equals(errorCode)) {
+            // 종목이 이미 존재함
+            status = HttpStatus.CONFLICT;
+            log.warn("종목 중복 등록 시도: {}", e.getMessage());
+        } else if (errorCode.startsWith("STOCK_00") && 
+                   (errorCode.equals("STOCK_003") || errorCode.equals("STOCK_004"))) {
+            // 잘못된 데이터 (STOCK_003, STOCK_004)
+            status = HttpStatus.BAD_REQUEST;
+            log.warn("잘못된 종목 데이터: {}", e.getMessage());
+        } else if (errorCode.startsWith("STOCK_00") && 
+                   Integer.parseInt(errorCode.substring(6)) >= 5) {
+            // Provider 오류 (STOCK_005 ~ STOCK_009)
+            status = HttpStatus.SERVICE_UNAVAILABLE;
+            log.error("주가 제공자 오류: {}", e.getMessage(), e);
+        } else {
+            // 기본값
+            status = HttpStatus.BAD_REQUEST;
+            log.warn("Stock 예외: {}", e.getMessage());
+        }
+        
+        return ResponseEntity.status(status)
+            .body(ErrorResponse.of(e.getMessage(), e.getErrorCode()));
     }
     
     /**

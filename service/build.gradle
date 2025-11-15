@@ -1,0 +1,172 @@
+// =====================================================
+// Service Layer Parent Module
+// 모든 service 하위 모듈의 공통 설정을 관리
+// =====================================================
+
+// ===== 모든 service 하위 모듈에 적용 =====
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    
+    group = 'com.truvis.service'
+    version = '0.0.1-SNAPSHOT'
+    
+    java {
+        sourceCompatibility = '17'
+        targetCompatibility = '17'
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+    
+    repositories {
+        mavenCentral()
+    }
+    
+    // ===== 공통 의존성 (모든 service 모듈) =====
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+    
+    // ===== 공통 빌드 설정 =====
+    // service 모듈들은 라이브러리이므로 실행 불가 jar로 빌드
+    tasks.named('bootJar') {
+        enabled = false
+    }
+    
+    tasks.named('jar') {
+        enabled = true
+        archiveClassifier = ''
+    }
+    
+    // ===== 테스트 설정 =====
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+}
+
+// =====================================================
+// 모듈별 특수 의존성 설정
+// =====================================================
+
+// ===== common: 가장 기본 모듈 =====
+project(':service:common') {
+    dependencies {
+        implementation 'org.springframework:spring-context'
+        implementation 'org.springframework:spring-web'
+        implementation 'org.springframework:spring-webmvc'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        
+        // JWT
+        implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+        runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+        runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    }
+}
+
+// ===== user: 사용자 관리 모듈 =====
+project(':service:user') {
+    dependencies {
+        implementation project(':service:common')
+        implementation project(':service:notification')
+        
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-mail'
+        implementation 'org.springframework:spring-tx'
+        implementation 'jakarta.persistence:jakarta.persistence-api'
+        implementation 'org.springframework.data:spring-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+    }
+}
+
+// ===== master: 투자 거장 모듈 =====
+project(':service:master') {
+    dependencies {
+        implementation project(':service:common')
+        
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    }
+}
+
+// ===== stock: 종목 관리 모듈 =====
+project(':service:stock') {
+    dependencies {
+        implementation project(':service:common')
+        
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    }
+}
+
+// ===== analysis: 분석 모듈 =====
+project(':service:analysis') {
+    dependencies {
+        implementation project(':service:common')
+        implementation project(':service:master')
+        implementation project(':service:stock')
+        
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    }
+}
+
+// ===== portfolio: 포트폴리오 모듈 =====
+project(':service:portfolio') {
+    dependencies {
+        implementation project(':service:common')
+        implementation project(':service:stock')
+        implementation project(':service:analysis')
+        
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    }
+}
+
+// ===== question: 질문 모듈 =====
+project(':service:question') {
+    dependencies {
+        implementation project(':service:common')
+        implementation project(':service:master')
+        
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    }
+}
+
+// ===== notification: 알림 모듈 =====
+project(':service:notification') {
+    dependencies {
+        implementation project(':service:common')
+        
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        implementation 'org.springframework.boot:spring-boot-starter-mail'
+        implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
+    }
+}
+
+// ===== transaction: 거래 모듈 =====
+project(':service:transaction') {
+    dependencies {
+        implementation project(':service:common')
+        
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        
+        runtimeOnly 'com.h2database:h2'
+        
+        testImplementation platform('org.junit:junit-bom:5.10.0')
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+    }
+}

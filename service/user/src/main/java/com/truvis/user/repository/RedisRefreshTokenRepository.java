@@ -1,4 +1,4 @@
-package com.truvis.user.infrastructure;
+package com.truvis.user.repository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

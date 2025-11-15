@@ -3,7 +3,8 @@ package com.truvis.user.application;
 import com.truvis.common.exception.MemberException;
 import com.truvis.common.security.JwtTokenProvider;
 import com.truvis.user.domain.*;
-import com.truvis.user.infrastructure.RedisRefreshTokenRepository;
+import com.truvis.user.repository.UserRepository;
+import com.truvis.user.repository.RedisRefreshTokenRepository;
 import com.truvis.user.infrastructure.oauth.OAuth2ClientProvider;
 import com.truvis.user.model.LoginResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -92,11 +93,11 @@ public class SocialAuthService {
      */
     private LoginResponse generateTokenResponse(User user) {
         // AccessToken 생성
-        String accessToken = jwtTokenProvider.createToken(user.getEmailValue());
+        String accessToken = jwtTokenProvider.createToken(user.getId());
         Date accessTokenExpiresAt = jwtTokenProvider.getExpirationDate(accessToken);
 
         // RefreshToken 생성
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmailValue());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
         Date refreshTokenExpiresAt = jwtTokenProvider.getExpirationDate(refreshToken);
 
         // RefreshToken을 Redis에 저장
