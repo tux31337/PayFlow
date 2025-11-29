@@ -42,10 +42,10 @@ public class User extends AggregateRoot<Long> {
     @Embedded
     private SocialProvider socialProvider;
     
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
     @Builder

@@ -6,7 +6,7 @@ import com.truvis.stock.domain.*;
 import com.truvis.stock.model.StockDetailResponse;
 import com.truvis.stock.model.StockResponse;
 import com.truvis.stock.model.StockSearchResponse;
-import com.truvis.stock.repository.StockRepository;
+import com.truvis.stock.infrastructure.JpaStockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class StockApplicationService {
 
-    private final StockRepository stockRepository;
+    private final JpaStockRepository stockRepository;
     private final StockPriceProvider stockPriceProvider;  // 가격 조회 Provider
     private final RedisTemplate<String, String> redisTemplate;
 

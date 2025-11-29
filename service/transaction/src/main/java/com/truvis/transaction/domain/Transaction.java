@@ -67,10 +67,10 @@ public class Transaction extends AggregateRoot<Long> {
     /**
      * 거래 실행 시각
      */
-    @Column(nullable = false)
+    @Column(name = "executed_at", nullable = false)
     private LocalDateTime executedAt;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     // private 생성자

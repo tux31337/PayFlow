@@ -1,4 +1,4 @@
-package com.truvis.stock.domain;
+package com.truvis.stock.domain.timescale;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -9,9 +9,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 주식 가격 히스토리
+ * 주식 가격 히스토리 (TimescaleDB 전용)
  * - WebSocket 실시간 체결가 저장
  * - 분석, 차트, 백테스팅 용도
+ * 
+ * Domain Layer:
+ * - 시계열 데이터의 도메인 모델
+ * - Stock과는 stockCode로만 느슨하게 연결
  */
 @Entity
 @Table(name = "stock_price_history",
@@ -28,7 +32,7 @@ public class StockPriceHistory {
     private Long id;
 
     /**
-     * 종목코드
+     * 종목코드 (Stock 엔티티 참조 - 느슨한 결합)
      */
     @Column(name = "stock_code", nullable = false, length = 10)
     private String stockCode;

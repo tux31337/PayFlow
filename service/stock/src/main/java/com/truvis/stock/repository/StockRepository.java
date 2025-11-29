@@ -17,20 +17,8 @@ import java.util.Optional;
 public interface StockRepository {
 
     // ==================== 기본 CRUD ====================
-
-    /**
-     * 종목 저장 (생성/수정)
-     * @param stock 저장할 종목
-     * @return 저장된 종목
-     */
-    Stock save(Stock stock);
-
-    /**
-     * ID로 종목 조회
-     * @param id 종목 ID
-     * @return 종목 (없으면 Optional.empty())
-     */
-    Optional<Stock> findById(Long id);
+    // save(), findById(), findAll(), delete()는 JpaRepository에서 제공
+    // 도메인 레이어에서는 도메인 의미 있는 메서드만 정의
 
     /**
      * 종목 코드로 종목 조회 (가장 중요한 메서드)
@@ -38,18 +26,6 @@ public interface StockRepository {
      * @return 종목 (없으면 Optional.empty())
      */
     Optional<Stock> findByStockCode(StockCode stockCode);
-
-    /**
-     * 모든 종목 조회
-     * @return 전체 종목 리스트
-     */
-    List<Stock> findAll();
-
-    /**
-     * 종목 삭제
-     * @param stock 삭제할 종목
-     */
-    void delete(Stock stock);
 
     // ==================== 존재 여부 확인 ====================
 
@@ -100,12 +76,7 @@ public interface StockRepository {
     List<Stock> findAllByStockCodes(List<StockCode> stockCodes);
 
     // ==================== 카운트 ====================
-
-    /**
-     * 전체 종목 수
-     * @return 종목 개수
-     */
-    long count();
+    // count()는 CrudRepository에서 제공
 
     /**
      * 시장별 종목 수

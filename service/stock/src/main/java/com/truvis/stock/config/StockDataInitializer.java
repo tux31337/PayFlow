@@ -2,9 +2,9 @@ package com.truvis.stock.config;
 
 import com.truvis.stock.domain.CurrentPrice;
 import com.truvis.stock.domain.Stock;
+import com.truvis.stock.infrastructure.JpaStockRepository;
 import com.truvis.stock.infrastructure.KisApiStockPriceProvider;
 import com.truvis.stock.infrastructure.websocket.KisWebSocketClient;
-import com.truvis.stock.repository.StockRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StockDataInitializer {
 
-    private final StockRepository stockRepository;
+    private final JpaStockRepository stockRepository;
     private final KisApiStockPriceProvider priceProvider;
     private final KisWebSocketClient webSocketClient;
 

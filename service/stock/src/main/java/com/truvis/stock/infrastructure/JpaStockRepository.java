@@ -77,3 +77,4 @@ public interface JpaStockRepository extends JpaRepository<Stock, Long>, StockRep
     @Override
     long countByMarket(Market market);
 }
+

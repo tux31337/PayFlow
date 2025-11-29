@@ -62,13 +62,13 @@ public class Stock extends AggregateRoot<Long> {
      * 가격 업데이트 시각
      * - 가격이 언제 마지막으로 업데이트되었는지 추적
      */
-    @Column(nullable = false)
+    @Column(name = "price_updated_at", nullable = false)
     private LocalDateTime priceUpdatedAt;
 
     /**
      * 생성 시각
      */
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     // ==================== 생성자 ====================

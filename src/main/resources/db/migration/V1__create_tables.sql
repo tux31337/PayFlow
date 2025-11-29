@@ -28,22 +28,6 @@ CREATE TABLE IF NOT EXISTS stocks (
     CONSTRAINT uk_stock_code UNIQUE (stock_code)
 );
 
--- Stock Price History 테이블
-CREATE TABLE IF NOT EXISTS stock_price_history (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    stock_code VARCHAR(10) NOT NULL,
-    trade_time TIMESTAMP NOT NULL,
-    current_price BIGINT NOT NULL,
-    price_change BIGINT,
-    change_rate DOUBLE,
-    volume BIGINT,
-    created_at TIMESTAMP NOT NULL
-);
-
--- 인덱스 생성
-CREATE INDEX IF NOT EXISTS idx_stock_time ON stock_price_history(stock_code, trade_time);
-CREATE INDEX IF NOT EXISTS idx_trade_time ON stock_price_history(trade_time);
-
 -- Transactions 테이블
 CREATE TABLE IF NOT EXISTS transactions (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
