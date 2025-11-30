@@ -87,10 +87,24 @@ public class Price implements ValueObject {
     }
 
     /**
+     * 가격 비교: 크거나 같은가?
+     */
+    public boolean isGreaterThanOrEqual(Price other) {
+        return this.value.compareTo(other.value) >= 0;
+    }
+
+    /**
      * 가격 비교: 더 싼가?
      */
     public boolean isLessThan(Price other) {
         return this.value.compareTo(other.value) < 0;
+    }
+
+    /**
+     * 가격 비교: 작거나 같은가?
+     */
+    public boolean isLessThanOrEqual(Price other) {
+        return this.value.compareTo(other.value) <= 0;
     }
 
     /**

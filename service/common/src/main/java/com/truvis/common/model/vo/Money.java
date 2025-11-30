@@ -27,6 +27,11 @@ public class Money implements ValueObject {
     private static final int SCALE = 2;  // 소수점 2자리
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
+    /**
+     * 0원 상수
+     */
+    public static final Money ZERO = new Money(BigDecimal.ZERO);
+
     @Column(name = "amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal value;
 
@@ -113,6 +118,24 @@ public class Money implements ValueObject {
             throw new IllegalArgumentException("0으로 나눌 수 없습니다");
         }
         return new Money(this.value.divide(divisor, SCALE, ROUNDING_MODE));
+    }
+
+    /**
+     * 수량으로 나누기 (평균 단가 계산)
+     * 
+     * @param quantity 수량
+     * @return 평균 단가 (Price)
+     */
+    public Price divide(Quantity quantity) {
+        if (quantity.getValue() == 0) {
+            throw new IllegalArgumentException("0으로 나눌 수 없습니다");
+        }
+        BigDecimal result = this.value.divide(
+                BigDecimal.valueOf(quantity.getValue()),
+                SCALE,
+                ROUNDING_MODE
+        );
+        return Price.of(result);
     }
 
     /**

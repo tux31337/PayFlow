@@ -36,8 +36,8 @@ public class Quantity implements ValueObject {
      * 검증 로직
      */
     private void validate(int value) {
-        if (value <= 0) {
-            throw new IllegalArgumentException("수량은 0보다 커야 합니다");
+        if (value < 0) {
+            throw new IllegalArgumentException("수량은 음수일 수 없습니다");
         }
     }
 
@@ -69,9 +69,37 @@ public class Quantity implements ValueObject {
     }
 
     /**
+     * 비교: 더 큰가?
+     */
+    public boolean isGreaterThan(Quantity other) {
+        return this.value > other.value;
+    }
+
+    /**
      * 비교: 같은 수량인가?
      */
     public boolean isSameAs(Quantity other) {
         return this.value == other.value;
+    }
+
+    /**
+     * 비교: 0인가?
+     */
+    public boolean isZero() {
+        return this.value == 0;
+    }
+
+    /**
+     * 비교: 음수인가?
+     */
+    public boolean isNegative() {
+        return this.value < 0;
+    }
+
+    /**
+     * 비교: 양수인가?
+     */
+    public boolean isPositive() {
+        return this.value > 0;
     }
 }
