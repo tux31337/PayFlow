@@ -27,7 +27,7 @@ public class User extends AggregateRoot<Long> {
     private String name;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "sign_up_type", nullable = false, length = 20)
     private SignUpType signUpType;
 
     // 비밀번호 getter - Application 계층에서 검증용
@@ -36,7 +36,7 @@ public class User extends AggregateRoot<Long> {
     private String password;
     
     // 소셜 가입용 - 일반 가입시 null
-    @Column(length = 100)
+    @Column(name = "social_id", length = 100)
     private String socialId;
     
     @Embedded

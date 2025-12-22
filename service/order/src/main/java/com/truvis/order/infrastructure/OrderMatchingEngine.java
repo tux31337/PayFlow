@@ -3,6 +3,8 @@ package com.truvis.order.infrastructure;
 import com.truvis.common.model.vo.Price;
 import com.truvis.order.application.OrderService;
 import com.truvis.order.domain.Order;
+import com.truvis.stock.application.StockApplicationService;
+import com.truvis.stock.model.StockDetailResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,7 +20,7 @@ import java.util.List;
  * 동작 방식:
  * 1. 1초마다 실행 (스케줄러)
  * 2. 모든 활성 주문 조회 (PENDING, PARTIALLY_FILLED)
- * 3. 각 주문의 종목 현재가 조회
+ * 3. 각 주문의 종목 현재가 조회 (Stock 모듈 연동)
  * 4. 체결 조건 충족 시 fillOrder() 호출
  * 
  * 실제 거래소와 동일한 방식:
@@ -32,8 +34,7 @@ import java.util.List;
 public class OrderMatchingEngine {
 
     private final OrderService orderService;
-    // TODO: StockPriceService 추가 필요
-    // private final StockPriceService stockPriceService;
+    private final StockApplicationService stockService;
 
     /**
      * 주문 매칭 스케줄러
@@ -73,44 +74,47 @@ public class OrderMatchingEngine {
      * 개별 주문 매칭
      */
     private void matchOrder(Order order) {
-        // TODO: 실제 시장 가격 조회 (Stock 모듈 연동 필요)
-        // Price currentPrice = stockPriceService.getCurrentPrice(order.getStockCode());
-        
-        // 임시: Mock 가격 (실제로는 Stock 모듈에서 가져와야 함)
-        Price currentPrice = getMockPrice(order.getStockCode().getValue());
-        
-        // 체결 조건 확인
-        if (order.canFillAtPrice(currentPrice)) {
-            log.info("체결 조건 충족! orderId: {}, stockCode: {}, orderType: {}, limitPrice: {}, currentPrice: {}",
-                    order.getId(),
-                    order.getStockCode().getValue(),
-                    order.getType(),
-                    order.getLimitPrice() != null ? order.getLimitPrice().getValue() : "N/A",
-                    currentPrice.getValue());
-
-            // 주문 체결 (전체 수량 체결)
-            orderService.fillOrder(
-                    order.getId(),
-                    order.getRemainingQuantity(),
-                    currentPrice
+        try {
+            // Stock 모듈에서 실시간 가격 조회
+            StockDetailResponse stock = stockService.getStockDetail(
+                    order.getStockCode().getValue()
             );
+            
+            // 가격 파싱 ("71,000" → 71000L)
+            Price currentPrice = parsePrice(stock.currentPrice());
+            
+            // 체결 조건 확인
+            if (order.canFillAtPrice(currentPrice)) {
+                log.info("체결 조건 충족! orderId: {}, stockCode: {}, orderType: {}, limitPrice: {}, currentPrice: {}",
+                        order.getId(),
+                        order.getStockCode().getValue(),
+                        order.getType(),
+                        order.getLimitPrice() != null ? order.getLimitPrice().getValue() : "N/A",
+                        currentPrice.getValue());
 
-            log.info("주문 체결 완료 - orderId: {}", order.getId());
+                // 주문 체결 (전체 수량 체결)
+                orderService.fillOrder(
+                        order.getId(),
+                        order.getRemainingQuantity(),
+                        currentPrice
+                );
+
+                log.info("주문 체결 완료 - orderId: {}", order.getId());
+            }
+        } catch (Exception e) {
+            log.error("주문 매칭 중 오류 - orderId: {}, stockCode: {}, error: {}", 
+                    order.getId(), 
+                    order.getStockCode().getValue(), 
+                    e.getMessage());
         }
     }
 
     /**
-     * Mock 가격 조회 (임시)
-     * 
-     * TODO: 실제로는 Stock 모듈의 실시간 가격을 가져와야 함
+     * 가격 문자열 파싱
+     * "71,000" → 71000L
      */
-    private Price getMockPrice(String stockCode) {
-        // 임시로 고정 가격 반환
-        return switch (stockCode) {
-            case "005930" -> Price.of(70000L);  // 삼성전자
-            case "000660" -> Price.of(90000L);  // SK하이닉스
-            case "035420" -> Price.of(50000L);  // NAVER
-            default -> Price.of(10000L);
-        };
+    private Price parsePrice(String priceStr) {
+        String cleaned = priceStr.replace(",", "");
+        return Price.of(Long.parseLong(cleaned));
     }
 }
