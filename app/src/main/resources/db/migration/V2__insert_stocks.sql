@@ -33,3 +33,6 @@ VALUES
     -- 유통/식품
     ('028260', '삼성물산', 'KOSPI', '유통', 0.01, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('097950', 'CJ제일제당', 'KOSPI', '식품', 0.01, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+
+

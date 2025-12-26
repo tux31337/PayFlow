@@ -6,7 +6,7 @@ import com.truvis.common.model.vo.StockCode;
 import com.truvis.transaction.domain.Transaction;
 import com.truvis.transaction.domain.TransactionType;
 import com.truvis.transaction.event.TransactionCompletedEvent;
-import com.truvis.transaction.repository.TransactionRepository;
+import com.truvis.transaction.domain.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;

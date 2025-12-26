@@ -32,6 +32,22 @@ public class Order extends AggregateRoot<Long> {
     private Long id;
 
     /**
+     * 낙관적 락(Optimistic Lock)을 위한 버전 관리
+     * 
+     * 동시성 제어:
+     * - JPA가 UPDATE 시 WHERE version = ? 조건 자동 추가
+     * - UPDATE 성공 후 version 자동 증가
+     * - 다른 트랜잭션이 먼저 수정했다면 OptimisticLockException 발생
+     * 
+     * 사용 사례:
+     * - 같은 주문을 여러 스레드가 동시에 체결 시도
+     * - 체결과 취소가 동시에 발생
+     * - 부분 체결이 동시에 여러 번 처리
+     */
+    @Version
+    private Long version;
+
+    /**
      * 주문한 사용자 ID
      */
     @Column(name = "user_id", nullable = false)

@@ -46,3 +46,5 @@ CREATE INDEX IF NOT EXISTS idx_user_id ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_stock ON transactions(user_id, stock_code);
 
 
+
+

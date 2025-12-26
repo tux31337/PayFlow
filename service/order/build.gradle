@@ -29,6 +29,8 @@ dependencies {
     implementation project(':service:common')
     implementation project(':service:stock')
     implementation project(':service:user')
+    implementation project(':service:transaction')
+    implementation project(':service:portfolio')
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'

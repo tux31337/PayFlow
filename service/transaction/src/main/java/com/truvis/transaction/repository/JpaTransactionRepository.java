@@ -1,6 +1,7 @@
 package com.truvis.transaction.repository;
 
 import com.truvis.transaction.domain.Transaction;
+import com.truvis.transaction.domain.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,6 +38,7 @@ interface TransactionJpaRepository extends JpaRepository<Transaction, Long> {
  * Transaction Repository JPA 구현체
  * - JPA 기술로 구현
  * - 영속성 처리 담당
+ *
  */
 @Repository
 @Slf4j

@@ -81,7 +81,7 @@ public class OrderMatchingEngine {
             );
             
             // 가격 파싱 ("71,000" → 71000L)
-            Price currentPrice = parsePrice(stock.currentPrice());
+            Price currentPrice = parsePrice(stock.getCurrentPrice());  
             
             // 체결 조건 확인
             if (order.canFillAtPrice(currentPrice)) {

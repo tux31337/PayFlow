@@ -27,8 +27,11 @@ import jakarta.persistence.EntityManagerFactory;
                 "com.truvis.stock.repository",
                 "com.truvis.stock.infrastructure",
                 "com.truvis.transaction.repository",
+                "com.truvis.transaction.domain",
                 "com.truvis.portfolio.repository",
-                "com.truvis.question.repository"
+                "com.truvis.question.repository",
+                "com.truvis.order.repository",
+                "com.truvis.order.domain"
         },
         excludeFilters = {
                 @org.springframework.context.annotation.ComponentScan.Filter(
@@ -69,10 +72,11 @@ public class PrimaryDataSourceConfig {
                 .dataSource(primaryDataSource())
                 .packages(
                         "com.truvis.user.domain",
-                        "com.truvis.stock.domain",  // 다시 추가!
+                        "com.truvis.stock.domain",
                         "com.truvis.transaction.domain",
                         "com.truvis.portfolio.domain",
-                        "com.truvis.question.domain"
+                        "com.truvis.question.domain",
+                        "com.truvis.order.domain"
                 )
                 .persistenceUnit("primary")
                 .properties(properties)

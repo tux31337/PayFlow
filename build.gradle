@@ -13,31 +13,13 @@ allprojects {
     }
 }
 
-// 루트 프로젝트 Java 버전 설정
-java {
-    sourceCompatibility = '17'
-    targetCompatibility = '17'
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+// 루트 프로젝트는 실행 가능한 애플리케이션이 아님
+bootJar {
+    enabled = false
 }
 
-// 루트 프로젝트 의존성
-dependencies {
-    implementation project(':service:user')
-    implementation project(':service:common')
-    implementation project(':service:stock')
-    implementation project(':controller')
-    implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.flywaydb:flyway-core'
-    implementation 'com.h2database:h2'
-    implementation 'org.postgresql:postgresql'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+jar {
+    enabled = false
 }
 
 subprojects {
@@ -72,5 +54,24 @@ subprojects {
     
     tasks.named('test') {
         useJUnitPlatform()
+    }
+    
+    // 기본적으로 서브모듈들은 라이브러리이므로 bootJar 비활성화
+    bootJar {
+        enabled = false
+    }
+    
+    jar {
+        enabled = true
+    }
+}
+
+// app 모듈은 실행 가능한 JAR를 생성해야 함
+project(':app') {
+    bootJar {
+        enabled = true
+    }
+    jar {
+        enabled = false
     }
 }
