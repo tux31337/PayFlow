@@ -22,7 +22,7 @@ public class WelcomeEmailService {
     }
 
     /**
-     * 🎉 환영 메일 발송
+     * 환영 메일 발송
      *
      * @param email 받는 사람 이메일
      * @param userName 사용자 이름
@@ -38,13 +38,12 @@ public class WelcomeEmailService {
 
             eventPublisher.publishEvent(event);
 
-            log.info("✅ 환영 메일 발송 이벤트 발행 완료: email={}", email);
+            log.debug("환영 메일 이벤트 발행: email={}", email);
 
         } catch (Exception e) {
             // 환영 메일 실패해도 회원가입은 성공!
-            log.error("⚠️ 환영 메일 이벤트 발행 실패 (무시): email={}, error={}",
+            log.warn("환영 메일 이벤트 발행 실패 (무시): email={}, error={}",
                     email, e.getMessage());
-            // 예외를 던지지 않음 → 회원가입은 정상 완료
         }
     }
 

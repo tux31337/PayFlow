@@ -1,6 +1,8 @@
 rootProject.name = 'truvis'
 
+include 'app'
 include 'controller'
+include 'service'
 include 'service:common'
 include 'service:user'
 include 'service:master'
@@ -10,3 +12,4 @@ include 'service:portfolio'
 include 'service:question'
 include 'service:notification'
 include 'service:transaction'
+include 'service:order'

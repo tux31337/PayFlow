@@ -1,7 +1,10 @@
 package com.truvis.transaction.domain;
 
 import com.truvis.common.model.AggregateRoot;
-import com.truvis.transaction.event.TransactionCompletedEvent;
+import com.truvis.common.model.vo.Money;
+import com.truvis.common.model.vo.Price;
+import com.truvis.common.model.vo.Quantity;
+import com.truvis.common.model.vo.StockCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+
 
 @Entity
 @Table(name = "transactions")
@@ -39,13 +43,11 @@ public class Transaction extends AggregateRoot<Long> {
     @Column(nullable = false, length = 10)
     private TransactionType type;
 
-
     /**
      * 거래 수량
      */
     @Embedded
     private Quantity quantity;
-
 
     /**
      * 거래 단가
@@ -62,15 +64,16 @@ public class Transaction extends AggregateRoot<Long> {
     private Money totalAmount;
 
     /**
-     * 거래 실행 시각
+     * 거래 실행 시각 (비즈니스 필드)
+     * - 실제 주문이 체결된 시각
      */
-    @Column(nullable = false)
+    @Column(name = "executed_at", nullable = false)
     private LocalDateTime executedAt;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+    // createdAt, updatedAt은 BaseEntity에서 자동 관리
 
-    // private 생성자
+    // ==================== 생성자 ====================
+
     private Transaction(
             Long userId,
             StockCode stockCode,
@@ -85,32 +88,22 @@ public class Transaction extends AggregateRoot<Long> {
         this.price = Objects.requireNonNull(price, "가격은 필수입니다");
         this.totalAmount = calculateTotalAmount(price, quantity);
         this.executedAt = LocalDateTime.now();
-        this.createdAt = LocalDateTime.now();
     }
 
     /**
-     * 정적 팩토리 메서드 - 거래 실행
-     *
-     * @return 실행된 거래 객체 (도메인 이벤트 포함)
+     * 정적 팩토리 메서드 - 거래 생성
      */
-    public static Transaction execute(
+    public static Transaction create(
             Long userId,
             StockCode stockCode,
             TransactionType type,
             Quantity quantity,
             Price price
     ) {
-        Transaction transaction = new Transaction(
-                userId, stockCode, type, quantity, price
-        );
-
-        // 도메인 이벤트 발행!
-        transaction.addDomainEvent(
-                TransactionCompletedEvent.of(transaction)
-        );
-
-        return transaction;
+        return new Transaction(userId, stockCode, type, quantity, price);
     }
+
+    // ==================== 비즈니스 로직 ====================
 
     /**
      * 총액 계산 (단가 × 수량)

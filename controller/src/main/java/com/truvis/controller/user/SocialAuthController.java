@@ -25,7 +25,6 @@ public class SocialAuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> socialLogin(@Valid @RequestBody SocialLoginRequest request) {
-        log.info("소셜 로그인 요청: provider={}, code={}", request.provider(), request.code());
         LoginResponse response = socialAuthService.socialLogin(request.provider(), request.code());
         return ResponseEntity.ok(response);
     }

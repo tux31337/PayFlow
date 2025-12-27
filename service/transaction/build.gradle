@@ -27,6 +27,7 @@ repositories {
 dependencies {
     // Common 모듈 의존성
     implementation project(':service:common')
+    implementation project(':service:stock')
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'

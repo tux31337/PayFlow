@@ -29,8 +29,27 @@ services:
     networks:
       - truvis-network
 
+  # TimescaleDB (시계열 데이터베이스)
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: truvis-timescaledb
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=payflow_timeseries
+      - POSTGRES_USER=truvis
+      - POSTGRES_PASSWORD=truvis123!
+    volumes:
+      - timescale-data:/var/lib/postgresql/data
+      - ./db/timescale/init:/docker-entrypoint-initdb.d
+    networks:
+      - truvis-network
+
 volumes:
   redis-data:
+    driver: local
+  timescale-data:
     driver: local
 
 networks:

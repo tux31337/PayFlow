@@ -1,5 +1,6 @@
 package com.truvis.transaction.domain;
 
+import com.truvis.common.model.vo.Quantity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -23,16 +24,16 @@ class QuantityTest {
     }
 
     @Test
-    @DisplayName("0 이하의 수량은 예외 발생")
-    void createQuantityWithZero() {
-        // when & then
-        assertThatThrownBy(() -> Quantity.of(0))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("0보다 커야 합니다");
+    @DisplayName("0과 음수 수량은 예외 발생")
+    void createQuantityWithNegative() {
+        // when & then - 0은 허용
+        Quantity zero = Quantity.of(0);
+        assertThat(zero.getValue()).isEqualTo(0);
 
+        // 음수는 불허
         assertThatThrownBy(() -> Quantity.of(-10))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("0보다 커야 합니다");
+                .hasMessageContaining("음수일 수 없습니다");
     }
 
     @Test

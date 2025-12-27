@@ -1,0 +1,24 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    api project(':service:common')
+    api project(':service:user')
+    api project(':service:stock')
+    api project(':service:master')
+    api project(':service:analysis')
+    api project(':service:portfolio')
+    api project(':service:question')
+    api project(':service:notification')
+    api project(':service:transaction')
+    api project(':service:order')
+}

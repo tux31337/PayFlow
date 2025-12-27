@@ -42,28 +42,22 @@ public class NotificationService {
      * 알림 발송
      */
     public void send(Notification notification) {
-        log.info("📨 알림 발송 시작: id={}, type={}, channel={}, recipient={}",
-                notification.getId(),
-                notification.getType().getDescription(),
-                notification.getChannel().getDescription(),
-                notification.getRecipient());
-
         try {
             // 0. 초기 상태(PENDING) Redis 저장
             statusRepository.save(notification);
-            log.debug("Redis 저장: PENDING");
+            log.debug("알림 저장: id={}, status=PENDING", notification.getId());
 
             // 1. 발송 시작 상태로 변경
             NotificationStatus oldStatus = notification.getStatus();
             notification.startSending();
-
-            // 상태 변경 → Redis 이동
             statusRepository.moveStatus(notification, oldStatus);
-            log.debug("상태 변경: PENDING → SENDING");
+            log.debug("알림 상태 변경: PENDING -> SENDING, id={}", notification.getId());
 
             // 2. 적절한 Provider 찾기
             NotificationProvider provider = findProvider(notification.getChannel());
-            log.debug("Provider 선택: {}", provider.getClass().getSimpleName());
+            log.debug("Provider 선택: {} for id={}", 
+                    provider.getClass().getSimpleName(), 
+                    notification.getId());
 
             // 3. 실제 발송
             provider.send(notification);
@@ -71,32 +65,29 @@ public class NotificationService {
             // 4. 발송 완료
             oldStatus = notification.getStatus();
             notification.markAsSent();
-
-            // 🎯 성공 → Redis 이동
             statusRepository.moveStatus(notification, oldStatus);
 
-            log.info("✅ 알림 발송 완료: id={}, duration={}ms",
+            log.info("알림 발송 완료: id={}, type={}, duration={}ms",
                     notification.getId(),
+                    notification.getType(),
                     notification.getSendingDurationMillis());
 
         } catch (Exception e) {
             // 5. 발송 실패
             NotificationStatus oldStatus = notification.getStatus();
             notification.markAsFailed(e.getMessage());
-
-            // 🎯 실패 → Redis 이동 (재시도용!)
             statusRepository.moveStatus(notification, oldStatus);
 
-            log.error("❌ 알림 발송 실패: id={}, error={}",
-                    notification.getId(), e.getMessage(), e);
+            log.error("알림 발송 실패: id={}, type={}, error={}",
+                    notification.getId(), 
+                    notification.getType(),
+                    e.getMessage());
 
-            // 재시도 가능 여부 확인
             if (notification.canRetry()) {
-                log.warn("🔄 재시도 가능: retryCount={}/{}",
+                log.warn("알림 재시도 가능: id={}, retryCount={}/{}",
+                        notification.getId(),
                         notification.getRetryCount(),
                         notification.getChannel().maxRetryCount());
-            } else {
-                log.error("🚫 재시도 불가: 최대 재시도 횟수 초과");
             }
 
             throw new RuntimeException("알림 발송 실패", e);

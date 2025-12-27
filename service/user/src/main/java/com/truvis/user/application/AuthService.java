@@ -7,8 +7,8 @@ import com.truvis.user.domain.User;
 import com.truvis.user.model.LoginRequest;
 import com.truvis.user.model.LoginResponse;
 import com.truvis.user.model.TokenResponse;
-import com.truvis.user.domain.UserRepository;
-import com.truvis.user.infrastructure.RedisRefreshTokenRepository;
+import com.truvis.user.repository.UserRepository;
+import com.truvis.user.repository.RedisRefreshTokenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -57,11 +57,11 @@ public class AuthService {
         }
 
         // 4. AccessToken 생성
-        String accessToken = jwtTokenProvider.createToken(user.getEmailValue());
+        String accessToken = jwtTokenProvider.createToken(user.getId());
         Date accessTokenExpiresAt = jwtTokenProvider.getExpirationDate(accessToken);
         
         // 5. RefreshToken 생성
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmailValue());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
         Date refreshTokenExpiresAt = jwtTokenProvider.getExpirationDate(refreshToken);
         
         // 6. RefreshToken을 Redis에 저장
@@ -85,12 +85,12 @@ public class AuthService {
             throw MemberException.invalidRefreshToken();
         }
         
-        // 2. 토큰에서 email 추출
-        String email = jwtTokenProvider.getEmail(refreshToken);
+        // 2. 토큰에서 userId 추출
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
         
         // 3. 사용자 조회
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> MemberException.userNotFoundByEmail(email));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> MemberException.userNotFound(userId));
         
         // 4. Redis에 저장된 RefreshToken과 비교
         String savedToken = refreshTokenRepository.findByUserId(user.getId());
@@ -99,7 +99,7 @@ public class AuthService {
         }
         
         // 5. 새로운 AccessToken 발급
-        String newAccessToken = jwtTokenProvider.createToken(user.getEmailValue());
+        String newAccessToken = jwtTokenProvider.createToken(user.getId());
         Date expiresAt = jwtTokenProvider.getExpirationDate(newAccessToken);
         
         return TokenResponse.of(newAccessToken, toLocalDateTime(expiresAt));
@@ -115,29 +115,25 @@ public class AuthService {
         if (jwtTokenProvider.validateToken(accessToken)) {
             Duration remainingTime = calculateRemainingTime(accessToken);
             tokenBlacklistService.addToBlacklist(accessToken, remainingTime);
-        } else {
-            log.warn("AccessToken이 유효하지 않음");
         }
 
         // 2. RefreshToken 검증 및 사용자 조회
-        log.info("RefreshToken 검증 시작");
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            log.warn("RefreshToken이 유효하지 않음");
+            log.debug("로그아웃 시 RefreshToken 유효하지 않음");
             return;
         }
         
-        String email = jwtTokenProvider.getEmail(refreshToken);
-        log.info("RefreshToken에서 추출한 email: {}", email);
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
+        User user = userRepository.findById(userId).orElse(null);
         
-        User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
-            log.warn("사용자를 찾을 수 없음: {}", email);
+            log.debug("로그아웃 시 사용자를 찾을 수 없음: userId={}", userId);
             return;
         }
         
         // 3. Redis에서 RefreshToken 삭제
         refreshTokenRepository.delete(user.getId());
-        log.info("로그아웃 완료");
+        log.info("로그아웃 완료: userId={}", userId);
     }
     
     /**
