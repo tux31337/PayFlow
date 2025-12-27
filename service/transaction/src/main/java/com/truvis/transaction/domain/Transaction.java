@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+
 @Entity
 @Table(name = "transactions")
 @Getter
@@ -42,13 +43,11 @@ public class Transaction extends AggregateRoot<Long> {
     @Column(nullable = false, length = 10)
     private TransactionType type;
 
-
     /**
      * 거래 수량
      */
     @Embedded
     private Quantity quantity;
-
 
     /**
      * 거래 단가
@@ -65,15 +64,16 @@ public class Transaction extends AggregateRoot<Long> {
     private Money totalAmount;
 
     /**
-     * 거래 실행 시각
+     * 거래 실행 시각 (비즈니스 필드)
+     * - 실제 주문이 체결된 시각
      */
     @Column(name = "executed_at", nullable = false)
     private LocalDateTime executedAt;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    // createdAt, updatedAt은 BaseEntity에서 자동 관리
 
-    // private 생성자
+    // ==================== 생성자 ====================
+
     private Transaction(
             Long userId,
             StockCode stockCode,
@@ -88,13 +88,10 @@ public class Transaction extends AggregateRoot<Long> {
         this.price = Objects.requireNonNull(price, "가격은 필수입니다");
         this.totalAmount = calculateTotalAmount(price, quantity);
         this.executedAt = LocalDateTime.now();
-        this.createdAt = LocalDateTime.now();
     }
 
     /**
      * 정적 팩토리 메서드 - 거래 생성
-     *
-     * @return 생성된 거래 객체
      */
     public static Transaction create(
             Long userId,
@@ -105,6 +102,8 @@ public class Transaction extends AggregateRoot<Long> {
     ) {
         return new Transaction(userId, stockCode, type, quantity, price);
     }
+
+    // ==================== 비즈니스 로직 ====================
 
     /**
      * 총액 계산 (단가 × 수량)

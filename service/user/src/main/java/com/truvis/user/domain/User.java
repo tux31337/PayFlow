@@ -8,8 +8,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
+/**
+ * User Aggregate Root
+ * 
+ * createdAt, updatedAt은 BaseEntity에서 자동 관리
+ */
 @Entity
 @Table(name = "users")
 @Getter
@@ -30,7 +33,6 @@ public class User extends AggregateRoot<Long> {
     @Column(name = "sign_up_type", nullable = false, length = 20)
     private SignUpType signUpType;
 
-    // 비밀번호 getter - Application 계층에서 검증용
     // 일반 가입용 - 소셜 가입시 null
     @Column(length = 100)
     private String password;
@@ -41,12 +43,8 @@ public class User extends AggregateRoot<Long> {
     
     @Embedded
     private SocialProvider socialProvider;
-    
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+
+    // createdAt, updatedAt은 BaseEntity에서 자동 관리
     
     @Builder
     private User(Email email, String name, SignUpType signUpType,
@@ -57,8 +55,6 @@ public class User extends AggregateRoot<Long> {
         this.password = password;
         this.socialId = socialId;
         this.socialProvider = socialProvider;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
     
     // 일반 이메일 가입용 팩토리 메서드
@@ -95,11 +91,6 @@ public class User extends AggregateRoot<Long> {
     
     public boolean isSocialUser() {
         return this.signUpType != SignUpType.EMAIL;
-    }
-    
-    @PreUpdate
-    private void updateTimestamp() {
-        this.updatedAt = LocalDateTime.now();
     }
 
     // 이메일 로그인 사용자인지 검증 (도메인 로직)

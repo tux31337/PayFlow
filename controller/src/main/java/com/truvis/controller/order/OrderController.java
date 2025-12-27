@@ -267,7 +267,7 @@ public class OrderController {
                     .remainingQuantity(order.getRemainingQuantity().getValue())
                     .limitPrice(order.getLimitPrice() != null ? order.getLimitPrice().getValue() : null)
                     .averagePrice(order.getAveragePrice() != null ? order.getAveragePrice().getValue() : null)
-                    .totalAmount(order.getTotalFilledAmount() != null ? order.getTotalFilledAmount().getValue() : null)
+                    .totalAmount(order.getTotalAmount() != null ? order.getTotalAmount().getValue() : null)
                     .createdAt(order.getCreatedAt())
                     .updatedAt(order.getUpdatedAt())
                     .build();

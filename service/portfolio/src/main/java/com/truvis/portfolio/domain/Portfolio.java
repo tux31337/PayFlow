@@ -10,7 +10,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -63,17 +62,7 @@ public class Portfolio extends AggregateRoot<Long> {
     @JoinColumn(name = "portfolio_id")
     private List<Holding> holdings = new ArrayList<>();
 
-    /**
-     * 생성 시각
-     */
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    /**
-     * 수정 시각
-     */
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    // createdAt, updatedAt은 BaseEntity에서 자동 관리
 
     // ==================== 생성자 ====================
 
@@ -82,8 +71,6 @@ public class Portfolio extends AggregateRoot<Long> {
         this.name = Objects.requireNonNull(name, "포트폴리오 이름은 필수입니다");
         this.cashBalance = Objects.requireNonNull(initialCash, "초기 자금은 필수입니다");
         this.holdings = new ArrayList<>();
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     // ==================== 정적 팩토리 메서드 ====================
@@ -114,7 +101,7 @@ public class Portfolio extends AggregateRoot<Long> {
         }
 
         this.cashBalance = this.cashBalance.add(amount);
-        this.updatedAt = LocalDateTime.now();
+        // updatedAt은 JPA Auditing이 자동 처리
     }
 
     /**
@@ -136,7 +123,6 @@ public class Portfolio extends AggregateRoot<Long> {
         }
 
         this.cashBalance = this.cashBalance.subtract(amount);
-        this.updatedAt = LocalDateTime.now();
     }
 
     /**
@@ -193,7 +179,6 @@ public class Portfolio extends AggregateRoot<Long> {
 
         // 4. 현금 차감
         this.cashBalance = this.cashBalance.subtract(requiredAmount);
-        this.updatedAt = LocalDateTime.now();
     }
 
     // ==================== 종목 매도 ====================
@@ -238,8 +223,6 @@ public class Portfolio extends AggregateRoot<Long> {
         if (holding.isEmpty()) {
             holdings.remove(holding);
         }
-
-        this.updatedAt = LocalDateTime.now();
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.truvis.portfolio.domain;
 
+import com.truvis.common.entity.BaseEntity;
 import com.truvis.common.model.vo.Money;
 import com.truvis.common.model.vo.Price;
 import com.truvis.common.model.vo.Quantity;
@@ -21,7 +22,7 @@ import java.util.Objects;
 @Table(name = "holdings")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Holding {
+public class Holding extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,18 +55,6 @@ public class Holding {
     @AttributeOverride(name = "value", column = @Column(name = "total_cost"))
     private Money totalCost;
 
-    /**
-     * 최초 매수 시각
-     */
-    @Column(name = "first_purchased_at", nullable = false)
-    private LocalDateTime firstPurchasedAt;
-
-    /**
-     * 최종 수정 시각
-     */
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     // ==================== 생성자 ====================
 
     private Holding(
@@ -77,8 +66,6 @@ public class Holding {
         this.quantity = Objects.requireNonNull(quantity, "수량은 필수입니다");
         this.averagePrice = Objects.requireNonNull(averagePrice, "평균 매수가는 필수입니다");
         this.totalCost = averagePrice.multiply(quantity);
-        this.firstPurchasedAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     // ==================== 정적 팩토리 메서드 ====================
@@ -92,6 +79,15 @@ public class Holding {
             Price price
     ) {
         return new Holding(stockCode, quantity, price);
+    }
+
+    // ==================== 비즈니스 편의 메서드 ====================
+
+    /**
+     * 최초 매수 시각 (createdAt의 비즈니스 alias)
+     */
+    public LocalDateTime getFirstPurchasedAt() {
+        return getCreatedAt();
     }
 
     // ==================== 비즈니스 로직 ====================
@@ -125,7 +121,7 @@ public class Holding {
         this.quantity = newQuantity;
         this.averagePrice = newAveragePrice;
         this.totalCost = newTotalCost;
-        this.updatedAt = LocalDateTime.now();
+        // updatedAt은 BaseEntity + JPA Auditing이 자동 처리
     }
 
     /**
@@ -156,7 +152,7 @@ public class Holding {
         // 업데이트
         this.quantity = newQuantity;
         this.totalCost = newTotalCost;
-        this.updatedAt = LocalDateTime.now();
+        // updatedAt은 BaseEntity + JPA Auditing이 자동 처리
     }
 
     /**

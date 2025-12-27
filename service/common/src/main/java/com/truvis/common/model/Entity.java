@@ -1,8 +1,16 @@
 package com.truvis.common.model;
 
+import com.truvis.common.entity.BaseEntity;
+
 import java.util.Objects;
 
-public abstract class Entity<ID> {
+/**
+ * 도메인 엔티티 기본 클래스
+ * 
+ * - BaseEntity 상속: createdAt, updatedAt 자동 관리
+ * - ID 기반 동등성 비교
+ */
+public abstract class Entity<ID> extends BaseEntity {
     
     protected ID id;
     

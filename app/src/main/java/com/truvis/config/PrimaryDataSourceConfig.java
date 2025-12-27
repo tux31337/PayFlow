@@ -66,7 +66,7 @@ public class PrimaryDataSourceConfig {
         
         // Hibernate 속성 설정
         java.util.Map<String, Object> properties = new java.util.HashMap<>();
-        properties.put("hibernate.hbm2ddl.auto", "none");  // 스키마 관리 안 함 - Flyway가 처리
+        properties.put("hibernate.hbm2ddl.auto", "validate");  
         
         return builder
                 .dataSource(primaryDataSource())

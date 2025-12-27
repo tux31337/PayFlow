@@ -10,11 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-/**
- * 종목 집합체 루트
- * - 종목의 기본 정보와 현재가를 관리
- * - 가격 업데이트 정책을 도메인 로직으로 캡슐화
- */
+
 @Entity
 @Table(name = "stocks")
 @Getter
@@ -27,7 +23,6 @@ public class Stock extends AggregateRoot<Long> {
 
     /**
      * 종목 코드 (예: "005930" - 삼성전자)
-     * Transaction 도메인과 공유하는 VO
      */
     @Embedded
     private StockCode stockCode;
@@ -59,17 +54,14 @@ public class Stock extends AggregateRoot<Long> {
     private CurrentPrice currentPrice;
 
     /**
-     * 가격 업데이트 시각
+     * 가격 업데이트 시각 (비즈니스 필드)
      * - 가격이 언제 마지막으로 업데이트되었는지 추적
+     * - updatedAt과 별개로 관리 (가격만 업데이트된 시각)
      */
     @Column(name = "price_updated_at", nullable = false)
     private LocalDateTime priceUpdatedAt;
 
-    /**
-     * 생성 시각
-     */
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    // createdAt, updatedAt은 BaseEntity에서 자동 관리
 
     // ==================== 생성자 ====================
 
@@ -86,7 +78,6 @@ public class Stock extends AggregateRoot<Long> {
         this.sector = Objects.requireNonNull(sector, "업종은 필수입니다");
         this.currentPrice = Objects.requireNonNull(currentPrice, "현재가는 필수입니다");
         this.priceUpdatedAt = LocalDateTime.now();
-        this.createdAt = LocalDateTime.now();
     }
 
     /**
@@ -107,18 +98,18 @@ public class Stock extends AggregateRoot<Long> {
     /**
      * 가격 업데이트
      * - 비즈니스 규칙: 가격은 항상 양수여야 함 (VO에서 검증)
-     * - 업데이트 시각을 자동으로 기록
+     * - priceUpdatedAt을 자동으로 기록
      */
     public void updatePrice(CurrentPrice newPrice) {
         Objects.requireNonNull(newPrice, "새로운 가격은 필수입니다");
         this.currentPrice = newPrice;
         this.priceUpdatedAt = LocalDateTime.now();
+        // updatedAt은 JPA Auditing이 자동 처리
     }
 
     /**
      * 가격이 오래되었는가?
      * - 비즈니스 규칙: 5분 이상 지난 가격은 stale로 간주
-     * - WebSocket 연동 전까지는 배치로 업데이트
      */
     public boolean isPriceStale() {
         return priceUpdatedAt.isBefore(LocalDateTime.now().minusMinutes(5));
@@ -126,7 +117,6 @@ public class Stock extends AggregateRoot<Long> {
 
     /**
      * 가격 변동률 계산
-     * - 이전 가격 대비 현재 가격의 변동률 (%)
      */
     public double calculateChangeRate(CurrentPrice previousPrice) {
         return currentPrice.calculateChangeRate(previousPrice);

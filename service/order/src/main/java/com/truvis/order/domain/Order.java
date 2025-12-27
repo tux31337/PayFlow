@@ -33,16 +33,6 @@ public class Order extends AggregateRoot<Long> {
 
     /**
      * 낙관적 락(Optimistic Lock)을 위한 버전 관리
-     * 
-     * 동시성 제어:
-     * - JPA가 UPDATE 시 WHERE version = ? 조건 자동 추가
-     * - UPDATE 성공 후 version 자동 증가
-     * - 다른 트랜잭션이 먼저 수정했다면 OptimisticLockException 발생
-     * 
-     * 사용 사례:
-     * - 같은 주문을 여러 스레드가 동시에 체결 시도
-     * - 체결과 취소가 동시에 발생
-     * - 부분 체결이 동시에 여러 번 처리
      */
     @Version
     private Long version;
@@ -123,17 +113,7 @@ public class Order extends AggregateRoot<Long> {
     @AttributeOverride(name = "value", column = @Column(name = "total_amount"))
     private Money totalAmount;
 
-    /**
-     * 주문 생성 시각
-     */
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    /**
-     * 주문 수정 시각
-     */
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    // createdAt, updatedAt은 BaseEntity에서 자동 관리
 
     /**
      * 주문 완료 시각 (체결/취소/거부)
@@ -168,10 +148,9 @@ public class Order extends AggregateRoot<Long> {
         this.quantity = quantity;
         this.filledQuantity = Quantity.of(0);
         this.remainingQuantity = quantity;
-        this.limitPrice = null; // 시장가는 지정가 없음
-        this.averagePrice = null; // 아직 체결 전
+        this.limitPrice = null;
+        this.averagePrice = null;
         this.totalAmount = Money.ZERO;
-        this.createdAt = LocalDateTime.now();
     }
 
     /**
@@ -198,7 +177,6 @@ public class Order extends AggregateRoot<Long> {
         this.limitPrice = limitPrice;
         this.averagePrice = null;
         this.totalAmount = Money.ZERO;
-        this.createdAt = LocalDateTime.now();
     }
 
     // ==================== 정적 팩토리 메서드 ====================
@@ -324,16 +302,12 @@ public class Order extends AggregateRoot<Long> {
      */
     public boolean canFillAtPrice(Price currentPrice) {
         if (type.isMarket()) {
-            // 시장가는 항상 체결 가능
             return true;
         }
 
-        // 지정가 주문의 경우
         if (side.isBuy()) {
-            // 매수: 현재가가 지정가 이하면 체결
             return currentPrice.isLessThanOrEqual(limitPrice);
         } else {
-            // 매도: 현재가가 지정가 이상이면 체결
             return currentPrice.isGreaterThanOrEqual(limitPrice);
         }
     }
@@ -345,18 +319,14 @@ public class Order extends AggregateRoot<Long> {
      */
     private void updateAveragePrice(Quantity newFilledQty, Price newFilledPrice) {
         if (this.averagePrice == null) {
-            // 첫 체결
             this.averagePrice = newFilledPrice;
         } else {
-            // 기존 체결이 있는 경우: 가중 평균 계산
-            // 새 평균가 = (기존 총액 + 신규 체결액) / 총 체결 수량
             Money previousAmount = this.averagePrice.multiply(this.filledQuantity.subtract(newFilledQty));
             Money newAmount = newFilledPrice.multiply(newFilledQty);
             Money totalAmount = previousAmount.add(newAmount);
             this.averagePrice = totalAmount.divide(this.filledQuantity);
         }
-        
-        this.updatedAt = LocalDateTime.now();
+        // updatedAt은 JPA Auditing이 자동 처리
     }
 
     /**
