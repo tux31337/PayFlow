@@ -1,100 +1,103 @@
 package com.truvis.common.exception;
 
 /**
- * Order 도메인 예외
+ * 📋 Order 도메인 예외
+ * 
+ * ErrorCode Enum 기반으로 HttpStatus가 자동으로 결정됩니다.
  */
 public class OrderException extends BusinessException {
 
-    public OrderException(String errorCode, String message) {
-        super(errorCode, message);
+    public OrderException(OrderErrorCode errorCode) {
+        super(errorCode);
     }
-
-    public OrderException(String errorCode, String message, Throwable cause) {
-        super(errorCode, message, cause);
+    
+    public OrderException(OrderErrorCode errorCode, String customMessage) {
+        super(errorCode, customMessage);
+    }
+    
+    public OrderException(OrderErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
+    
+    public OrderException(OrderErrorCode errorCode, String customMessage, Throwable cause) {
+        super(errorCode, customMessage, cause);
     }
 
     // ==================== 팩토리 메서드 ====================
 
     /**
-     * 주문을 찾을 수 없음
+     * 주문을 찾을 수 없음 (404)
      */
     public static OrderException notFound(Long orderId) {
         return new OrderException(
-                "ORDER_001",
+                OrderErrorCode.NOT_FOUND,
                 String.format("주문을 찾을 수 없습니다. orderId: %d", orderId)
         );
     }
 
     /**
-     * 주문 권한 없음 (본인 주문이 아님)
+     * 주문 권한 없음 (403)
      */
     public static OrderException unauthorized(Long orderId) {
         return new OrderException(
-                "ORDER_002",
+                OrderErrorCode.UNAUTHORIZED,
                 String.format("본인의 주문만 접근할 수 있습니다. orderId: %d", orderId)
         );
     }
 
     /**
-     * 주문 취소 불가 상태
+     * 주문 취소 불가 상태 (400)
      */
     public static OrderException cannotCancel(Long orderId, String status) {
         return new OrderException(
-                "ORDER_003",
+                OrderErrorCode.CANNOT_CANCEL,
                 String.format("취소할 수 없는 주문 상태입니다. orderId: %d, status: %s", orderId, status)
         );
     }
 
     /**
-     * 주문 생성 실패 - 잔고 부족
+     * 잔고 부족 (400)
      */
     public static OrderException insufficientBalance(long currentBalance, long requiredAmount) {
         return new OrderException(
-                "ORDER_004",
+                OrderErrorCode.INSUFFICIENT_BALANCE,
                 String.format("잔고가 부족하여 매수 주문을 생성할 수 없습니다. 현재 잔고: %,d원, 필요 금액: %,d원", 
                         currentBalance, requiredAmount)
         );
     }
 
     /**
-     * 주문 생성 실패 - 보유 수량 부족
+     * 보유 수량 부족 (400)
      */
     public static OrderException insufficientHolding(String stockCode, int holdingQty, int requestedQty) {
         return new OrderException(
-                "ORDER_005",
+                OrderErrorCode.INSUFFICIENT_HOLDING,
                 String.format("보유 수량이 부족하여 매도 주문을 생성할 수 없습니다. 종목: %s, 보유: %d주, 요청: %d주",
                         stockCode, holdingQty, requestedQty)
         );
     }
 
     /**
-     * 필수 파라미터 누락 - 지정가
+     * 지정가 필수 (400)
      */
     public static OrderException limitPriceRequired() {
-        return new OrderException(
-                "ORDER_006",
-                "지정가 주문은 지정가가 필요합니다"
-        );
+        return new OrderException(OrderErrorCode.LIMIT_PRICE_REQUIRED);
     }
 
     /**
-     * 필수 파라미터 누락 - 예상 가격
+     * 예상 가격 필수 (400)
      */
     public static OrderException estimatedPriceRequired() {
-        return new OrderException(
-                "ORDER_007",
-                "시장가 매수 주문은 예상 가격이 필요합니다"
-        );
+        return new OrderException(OrderErrorCode.ESTIMATED_PRICE_REQUIRED);
     }
 
     /**
-     * 이미 체결 완료된 주문
+     * 이미 체결 완료 (400)
      */
     public static OrderException alreadyFilled(Long orderId) {
         return new OrderException(
-                "ORDER_008",
+                OrderErrorCode.ALREADY_FILLED,
                 String.format("이미 체결 완료된 주문입니다. orderId: %d", orderId)
         );
     }
 }
-
