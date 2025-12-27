@@ -2,6 +2,8 @@ package com.truvis.common.config;
 
 import com.truvis.common.exception.BusinessException;
 import com.truvis.common.exception.EmailVerificationException;
+import com.truvis.common.exception.OrderException;
+import com.truvis.common.exception.PortfolioException;
 import com.truvis.common.exception.StockException;
 import com.truvis.common.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +59,61 @@ public class GlobalExceptionHandler {
     }
     
     /**
-     * 2-1️⃣ Stock 예외 처리 (에러 코드별 HTTP 상태 매핑)
+     * 2-1️⃣ Portfolio 예외 처리
+     */
+    @ExceptionHandler(PortfolioException.class)
+    public ResponseEntity<ErrorResponse> handlePortfolioException(PortfolioException e) {
+        String errorCode = e.getErrorCode();
+        HttpStatus status;
+
+        // 에러 코드에 따라 HTTP 상태 코드 결정
+        if ("PORTFOLIO_001".equals(errorCode)) {
+            // 포트폴리오를 찾을 수 없음
+            status = HttpStatus.NOT_FOUND;
+            log.warn("포트폴리오 조회 실패: {}", e.getMessage());
+        } else if ("PORTFOLIO_002".equals(errorCode)) {
+            // 이미 존재함
+            status = HttpStatus.CONFLICT;
+            log.warn("포트폴리오 중복: {}", e.getMessage());
+        } else {
+            // 그 외 (잔고 부족, 보유 수량 부족 등)
+            status = HttpStatus.BAD_REQUEST;
+            log.warn("포트폴리오 예외: {}", e.getMessage());
+        }
+
+        return ResponseEntity.status(status)
+            .body(ErrorResponse.of(e.getMessage(), e.getErrorCode()));
+    }
+
+    /**
+     * 2-2️⃣ Order 예외 처리
+     */
+    @ExceptionHandler(OrderException.class)
+    public ResponseEntity<ErrorResponse> handleOrderException(OrderException e) {
+        String errorCode = e.getErrorCode();
+        HttpStatus status;
+
+        // 에러 코드에 따라 HTTP 상태 코드 결정
+        if ("ORDER_001".equals(errorCode)) {
+            // 주문을 찾을 수 없음
+            status = HttpStatus.NOT_FOUND;
+            log.warn("주문 조회 실패: {}", e.getMessage());
+        } else if ("ORDER_002".equals(errorCode)) {
+            // 권한 없음
+            status = HttpStatus.FORBIDDEN;
+            log.warn("주문 접근 권한 없음: {}", e.getMessage());
+        } else {
+            // 그 외 (잔고 부족, 보유 수량 부족, 파라미터 오류 등)
+            status = HttpStatus.BAD_REQUEST;
+            log.warn("주문 예외: {}", e.getMessage());
+        }
+
+        return ResponseEntity.status(status)
+            .body(ErrorResponse.of(e.getMessage(), e.getErrorCode()));
+    }
+
+    /**
+     * 2-3️⃣ Stock 예외 처리 (에러 코드별 HTTP 상태 매핑)
      */
     @ExceptionHandler(StockException.class)
     public ResponseEntity<ErrorResponse> handleStockException(StockException e) {
@@ -118,6 +174,23 @@ public class GlobalExceptionHandler {
         log.warn("잘못된 파라미터: {}", e.getMessage());
         return ResponseEntity.badRequest()
             .body(ErrorResponse.badRequest(e.getMessage()));
+    }
+
+    /**
+     * 4-1️⃣ IllegalStateException 처리 (잘못된 상태)
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException e) {
+        log.warn("잘못된 상태: {}", e.getMessage());
+        
+        // 인증 관련 메시지인 경우 401 반환
+        if (e.getMessage() != null && e.getMessage().contains("인증")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(e.getMessage(), "AUTH_REQUIRED"));
+        }
+        
+        return ResponseEntity.badRequest()
+            .body(ErrorResponse.of(e.getMessage(), "INVALID_STATE"));
     }
     
     /**

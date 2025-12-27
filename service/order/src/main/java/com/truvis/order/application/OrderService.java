@@ -1,5 +1,7 @@
 package com.truvis.order.application;
 
+import com.truvis.common.exception.OrderException;
+import com.truvis.common.model.vo.Money;
 import com.truvis.common.model.vo.Price;
 import com.truvis.common.model.vo.Quantity;
 import com.truvis.common.model.vo.StockCode;
@@ -8,6 +10,7 @@ import com.truvis.order.repository.OrderRepository;
 import com.truvis.order.event.OrderCancelledEvent;
 import com.truvis.order.event.OrderCreatedEvent;
 import com.truvis.order.event.OrderFilledEvent;
+import com.truvis.portfolio.application.PortfolioApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,11 +36,50 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final PortfolioApplicationService portfolioService;
 
     // ==================== 주문 생성 ====================
 
     /**
      * 시장가 매수 주문 생성
+     * 
+     * 참고: 시장가 주문은 정확한 체결 금액을 알 수 없으므로,
+     * 예상 금액(estimatedPrice * quantity)으로 잔고 검증을 수행합니다.
+     * 
+     * @param userId 사용자 ID
+     * @param stockCode 종목 코드
+     * @param quantity 주문 수량
+     * @param estimatedPrice 예상 체결가 (현재가 기준)
+     */
+    @Transactional
+    public Order createMarketBuyOrder(
+            Long userId,
+            StockCode stockCode,
+            Quantity quantity,
+            Price estimatedPrice
+    ) {
+        log.info("시장가 매수 주문 생성 요청 - userId: {}, stockCode: {}, quantity: {}, estimatedPrice: {}",
+                userId, stockCode.getValue(), quantity.getValue(), estimatedPrice.getValue());
+
+        // 잔고 확인 (예상 금액 기준)
+        Money estimatedAmount = estimatedPrice.multiply(quantity);
+        portfolioService.validateBuyOrder(userId, estimatedAmount);
+
+        // 주문 생성
+        Order order = Order.createMarketBuyOrder(userId, stockCode, quantity);
+        Order savedOrder = orderRepository.save(order);
+
+        // 주문 생성 이벤트 발행
+        publishOrderCreatedEvent(savedOrder);
+
+        log.info("시장가 매수 주문 생성 완료 - orderId: {}", savedOrder.getId());
+        return savedOrder;
+    }
+
+    /**
+     * 시장가 매수 주문 생성 (잔고 검증 없이 - 기존 호환성)
+     * 
+     * @deprecated 잔고 검증이 포함된 메서드 사용 권장
      */
     @Transactional
     public Order createMarketBuyOrder(
@@ -45,13 +87,10 @@ public class OrderService {
             StockCode stockCode,
             Quantity quantity
     ) {
-        log.info("시장가 매수 주문 생성 요청 - userId: {}, stockCode: {}, quantity: {}",
+        log.info("시장가 매수 주문 생성 요청 (검증 생략) - userId: {}, stockCode: {}, quantity: {}",
                 userId, stockCode.getValue(), quantity.getValue());
 
-        // TODO: 잔고 확인 로직 (나중에 Portfolio와 연동)
-        // validateBalance(userId, estimatedAmount);
-
-        // 주문 생성
+        // 주문 생성 (검증 생략)
         Order order = Order.createMarketBuyOrder(userId, stockCode, quantity);
         Order savedOrder = orderRepository.save(order);
 
@@ -75,9 +114,9 @@ public class OrderService {
         log.info("지정가 매수 주문 생성 요청 - userId: {}, stockCode: {}, quantity: {}, limitPrice: {}",
                 userId, stockCode.getValue(), quantity.getValue(), limitPrice.getValue());
 
-        // TODO: 잔고 확인 (지정가 * 수량)
-        // Money estimatedAmount = limitPrice.multiply(quantity);
-        // validateBalance(userId, estimatedAmount);
+        // 잔고 확인 (지정가 * 수량)
+        Money requiredAmount = limitPrice.multiply(quantity);
+        portfolioService.validateBuyOrder(userId, requiredAmount);
 
         // 주문 생성
         Order order = Order.createLimitBuyOrder(userId, stockCode, quantity, limitPrice);
@@ -102,8 +141,8 @@ public class OrderService {
         log.info("시장가 매도 주문 생성 요청 - userId: {}, stockCode: {}, quantity: {}",
                 userId, stockCode.getValue(), quantity.getValue());
 
-        // TODO: 보유 수량 확인 (Portfolio와 연동)
-        // validateHolding(userId, stockCode, quantity);
+        // 보유 수량 확인
+        portfolioService.validateSellOrder(userId, stockCode, quantity);
 
         // 주문 생성
         Order order = Order.createMarketSellOrder(userId, stockCode, quantity);
@@ -129,8 +168,8 @@ public class OrderService {
         log.info("지정가 매도 주문 생성 요청 - userId: {}, stockCode: {}, quantity: {}, limitPrice: {}",
                 userId, stockCode.getValue(), quantity.getValue(), limitPrice.getValue());
 
-        // TODO: 보유 수량 확인
-        // validateHolding(userId, stockCode, quantity);
+        // 보유 수량 확인
+        portfolioService.validateSellOrder(userId, stockCode, quantity);
 
         // 주문 생성
         Order order = Order.createLimitSellOrder(userId, stockCode, quantity, limitPrice);
@@ -150,9 +189,7 @@ public class OrderService {
      */
     public Order getOrder(Long orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        String.format("주문을 찾을 수 없습니다. orderId: %d", orderId)
-                ));
+                .orElseThrow(() -> OrderException.notFound(orderId));
     }
 
     /**
@@ -203,7 +240,7 @@ public class OrderService {
 
         // 권한 확인
         if (!order.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("본인의 주문만 취소할 수 있습니다");
+            throw OrderException.unauthorized(orderId);
         }
 
         // 주문 취소
@@ -313,15 +350,33 @@ public class OrderService {
         log.debug("OrderCancelledEvent 발행 - orderId: {}", order.getId());
     }
 
-    // ==================== 검증 로직 (TODO: Portfolio 연동 후 구현) ====================
+    // ==================== 검증 헬퍼 메서드 ====================
 
-    // private void validateBalance(Long userId, Money requiredAmount) {
-    //     // Portfolio에서 잔고 확인
-    //     // 잔고 부족 시 예외 발생
-    // }
+    /**
+     * 매수 가능 여부 확인 (조회용)
+     */
+    public boolean canBuy(Long userId, Money amount) {
+        return portfolioService.canBuy(userId, amount);
+    }
 
-    // private void validateHolding(Long userId, StockCode stockCode, Quantity quantity) {
-    //     // Portfolio에서 보유 수량 확인
-    //     // 보유 수량 부족 시 예외 발생
-    // }
+    /**
+     * 매도 가능 여부 확인 (조회용)
+     */
+    public boolean canSell(Long userId, StockCode stockCode, Quantity quantity) {
+        return portfolioService.canSell(userId, stockCode, quantity);
+    }
+
+    /**
+     * 현금 잔고 조회
+     */
+    public Money getCashBalance(Long userId) {
+        return portfolioService.getCashBalance(userId);
+    }
+
+    /**
+     * 특정 종목 보유 수량 조회
+     */
+    public Quantity getHoldingQuantity(Long userId, StockCode stockCode) {
+        return portfolioService.getHoldingQuantity(userId, stockCode);
+    }
 }

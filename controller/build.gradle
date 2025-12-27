@@ -31,6 +31,8 @@ dependencies {
     implementation project(':service:user')
     implementation project(":service:transaction")
     implementation project(":service:stock")
+    implementation project(":service:portfolio")
+    implementation project(":service:order")
 
 
     // Spring Boot
