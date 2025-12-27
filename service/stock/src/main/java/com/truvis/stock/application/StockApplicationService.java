@@ -13,6 +13,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -42,24 +45,22 @@ public class StockApplicationService {
     // ==================== 조회 ====================
 
     /**
-     * 종목 검색 (자동완성용)
-     * - 종목명으로 부분 검색
+     * 종목 검색 (페이징)
      *
      * @param keyword 검색 키워드
-     * @return 검색된 종목 리스트
+     * @param pageable 페이징 정보
+     * @return 검색된 종목 페이지
      */
-    public List<StockSearchResponse> searchStocks(String keyword) {
-        log.info("종목 검색: keyword={}", keyword);
+    public Page<StockSearchResponse> searchStocks(String keyword, Pageable pageable) {
+        log.info("종목 검색: keyword={}, page={}, size={}", keyword, pageable.getPageNumber(), pageable.getPageSize());
 
         if (keyword == null || keyword.trim().isEmpty()) {
-            return List.of();
+            return Page.empty(pageable);
         }
 
-        List<Stock> stocks = stockRepository.searchByNameContaining(keyword.trim());
+        Page<Stock> stocks = stockRepository.searchByNameContaining(keyword.trim(), pageable);
 
-        return stocks.stream()
-                .map(this::toSearchResponse)
-                .collect(Collectors.toList());
+        return stocks.map(this::toSearchResponse);
     }
 
     /**
@@ -206,10 +207,22 @@ public class StockApplicationService {
 
 
     /**
-     * 시장별 종목 조회
+     * 시장별 종목 조회 (페이징)
      *
      * @param market 시장 (KOSPI, KOSDAQ, KONEX)
-     * @return 해당 시장의 종목 리스트
+     * @param pageable 페이징 정보
+     * @return 해당 시장의 종목 페이지
+     */
+    public Page<StockResponse> getStocksByMarket(Market market, Pageable pageable) {
+        log.info("시장별 종목 조회: market={}, page={}, size={}", market, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<Stock> stocks = stockRepository.findByMarket(market, pageable);
+
+        return stocks.map(this::toResponse);
+    }
+
+    /**
+     * 시장별 종목 조회 (전체) - 배치용
      */
     public List<StockResponse> getStocksByMarket(Market market) {
         log.info("시장별 종목 조회: market={}", market);

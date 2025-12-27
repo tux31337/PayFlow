@@ -5,6 +5,8 @@ import com.truvis.stock.domain.Market;
 import com.truvis.stock.domain.Sector;
 import com.truvis.stock.domain.Stock;
 import com.truvis.stock.repository.StockRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,31 +16,27 @@ import java.util.Optional;
 
 /**
  * Stock Repository JPA 구현체
- * - Spring Data JPA가 자동으로 구현체 생성
- * - 도메인 Repository 인터페이스를 확장
  */
 public interface JpaStockRepository extends JpaRepository<Stock, Long>, StockRepository {
 
-    // ==================== 기본 CRUD ====================
-    // JpaRepository가 제공: save(), findById(), findAll(), delete(), count()
+    // ==================== 기본 조회 ====================
 
-    // ==================== 커스텀 메서드 ====================
-
-    /**
-     * 종목 코드로 조회
-     * - 메서드 이름으로 쿼리 자동 생성 (Query Method)
-     */
     @Override
     Optional<Stock> findByStockCode(StockCode stockCode);
 
-    /**
-     * 종목 코드 존재 여부
-     */
     @Override
     boolean existsByStockCode(StockCode stockCode);
 
+    // ==================== 페이징 조회 ====================
+
     /**
-     * 시장별 조회
+     * 시장별 조회 (페이징)
+     */
+    @Override
+    Page<Stock> findByMarket(Market market, Pageable pageable);
+
+    /**
+     * 시장별 조회 (전체)
      */
     @Override
     List<Stock> findByMarket(Market market);
@@ -56,16 +54,14 @@ public interface JpaStockRepository extends JpaRepository<Stock, Long>, StockRep
     List<Stock> findByMarketAndSector(Market market, Sector sector);
 
     /**
-     * 종목명 검색 (LIKE 검색)
-     * - name.value에 접근 (Embedded 객체)
+     * 종목명 검색 (페이징)
      */
     @Query("SELECT s FROM Stock s WHERE s.name.value LIKE %:keyword%")
     @Override
-    List<Stock> searchByNameContaining(@Param("keyword") String keyword);
+    Page<Stock> searchByNameContaining(@Param("keyword") String keyword, Pageable pageable);
 
     /**
      * 여러 종목 코드로 일괄 조회
-     * - IN 절 사용
      */
     @Query("SELECT s FROM Stock s WHERE s.stockCode IN :stockCodes")
     @Override
@@ -77,4 +73,3 @@ public interface JpaStockRepository extends JpaRepository<Stock, Long>, StockRep
     @Override
     long countByMarket(Market market);
 }
-

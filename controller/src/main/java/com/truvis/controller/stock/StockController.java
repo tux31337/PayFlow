@@ -11,6 +11,9 @@ import com.truvis.stock.model.StockResponse;
 import com.truvis.stock.model.StockSearchResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +35,15 @@ public class StockController {
     private final KisWebSocketClient kisWebSocketClient;
 
     /**
-     * 종목 검색 (자동완성)
-     * GET /api/stocks/search?keyword=삼성
+     * 종목 검색 (페이징)
+     * GET /api/stocks/search?keyword=삼성&page=0&size=20
      */
     @GetMapping("/search")
-    public ResponseEntity<List<StockSearchResponse>> searchStocks(
-            @RequestParam String keyword
+    public ResponseEntity<Page<StockSearchResponse>> searchStocks(
+            @RequestParam String keyword,
+            @PageableDefault(size = 20) Pageable pageable
     ) {
-        List<StockSearchResponse> results = stockApplicationService.searchStocks(keyword);
+        Page<StockSearchResponse> results = stockApplicationService.searchStocks(keyword, pageable);
         return ResponseEntity.ok(results);
     }
 
@@ -56,14 +60,15 @@ public class StockController {
     }
 
     /**
-     * 시장별 종목 조회
-     * GET /api/stocks/market/{market}
+     * 시장별 종목 조회 (페이징)
+     * GET /api/stocks/market/{market}?page=0&size=20
      */
     @GetMapping("/market/{market}")
-    public ResponseEntity<List<StockResponse>> getStocksByMarket(
-            @PathVariable Market market
+    public ResponseEntity<Page<StockResponse>> getStocksByMarket(
+            @PathVariable Market market,
+            @PageableDefault(size = 20) Pageable pageable
     ) {
-        List<StockResponse> responses = stockApplicationService.getStocksByMarket(market);
+        Page<StockResponse> responses = stockApplicationService.getStocksByMarket(market, pageable);
         return ResponseEntity.ok(responses);
     }
 
